@@ -2,8 +2,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
+  Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -12,94 +14,209 @@ import {
 } from 'react-native';
 import { Colors, Spacing, Typography } from '../../constants/theme';
 
-const RINGS = [
-  { id: '1', label: 'Your story', initials: 'You', isAdd: true },
-  { id: '2', label: 'Design', initials: 'PD', active: true },
-  { id: '3', label: 'Kodjo', initials: 'KO', active: false },
-  { id: '4', label: 'Finance', initials: 'FN', active: false },
+interface StoryAccount {
+  id: string;
+  name: string;
+  initials: string;
+  roleOrTime: string;
+  accentColor: string;
+  isOwn?: boolean;
+  caption: string;
+}
+
+const STORY_ACCOUNTS: StoryAccount[] = [
+  {
+    id: '1',
+    name: 'Your story',
+    initials: 'You',
+    roleOrTime: 'Tap to add',
+    accentColor: Colors.cyanPrimary,
+    isOwn: true,
+    caption: 'Share a quick update with your team for the next 24 hours.',
+  },
+  {
+    id: '2',
+    name: 'Design',
+    initials: 'PD',
+    roleOrTime: '2h ago',
+    accentColor: Colors.purpleAi,
+    caption:
+      'New tokens are live — every accent now passes AA on the card surface.',
+  },
+  {
+    id: '3',
+    name: 'Kodjo',
+    initials: 'KO',
+    roleOrTime: '3h ago',
+    accentColor: Colors.success,
+    caption:
+      'Voice notes now include instant transcript previews right in the thread.',
+  },
+  {
+    id: '4',
+    name: 'Finance',
+    initials: 'FN',
+    roleOrTime: '5h ago',
+    accentColor: Colors.warning,
+    caption: 'Q4 budget checkpoint completed — ready for sign-off.',
+  },
+  {
+    id: '5',
+    name: 'Amina',
+    initials: 'AM',
+    roleOrTime: '6h ago',
+    accentColor: Colors.blueInfo,
+    caption: 'Updated deck slides uploaded to the shared workspace.',
+  },
 ];
 
 export default function StoriesScreen() {
-  const [selected, setSelected] = useState('2');
+  const [selectedId, setSelectedId] = useState<string>('2');
   const [reply, setReply] = useState('');
+
+  const activeAccount =
+    STORY_ACCOUNTS.find((acc) => acc.id === selectedId) ?? STORY_ACCOUNTS[1];
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Stories</Text>
-        <Text style={styles.subtitle}>Your team, last 24 hours</Text>
+      {/* Top Centered Brand Header */}
+      <View style={styles.topBrandBar}>
+        <Text style={styles.brandTitle}>BizSphere</Text>
       </View>
 
-      {/* Ring Rail */}
-      <View>
+      {/* White Divider Between BizSphere and Stories */}
+      <View style={styles.whiteDivider} />
+
+      {/* Section Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Stories</Text>
+        <Text style={styles.sectionSubtitle}>Your team, last 24 hours</Text>
+      </View>
+
+      {/* Accounts Ring Rail — Name Centered Directly Under Each Icon */}
+      <View style={styles.railWrapper}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.ringRail}
         >
-          {RINGS.map((ring) => {
-            const isSelected = selected === ring.id;
+          {STORY_ACCOUNTS.map((account) => {
+            const isSelected = account.id === selectedId;
             return (
               <TouchableOpacity
-                key={ring.id}
-                style={styles.ringItem}
-                onPress={() => setSelected(ring.id)}
+                key={account.id}
+                style={styles.accountColumn}
+                activeOpacity={0.85}
+                onPress={() => setSelectedId(account.id)}
               >
                 <View
                   style={[
-                    styles.ringCircle,
-                    isSelected && styles.ringCircleActive,
+                    styles.ringOuter,
+                    isSelected && { borderColor: account.accentColor },
                   ]}
                 >
-                  <Text style={styles.ringInitials}>{ring.initials}</Text>
+                  <View
+                    style={[
+                      styles.avatarInner,
+                      { backgroundColor: `${account.accentColor}22` },
+                    ]}
+                  >
+                    {account.isOwn ? (
+                      <Ionicons
+                        name="add"
+                        size={22}
+                        color={account.accentColor}
+                      />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.avatarText,
+                          { color: account.accentColor },
+                        ]}
+                      >
+                        {account.initials}
+                      </Text>
+                    )}
+                  </View>
                 </View>
-                <Text style={styles.ringLabel}>{ring.label}</Text>
+
+                <Text
+                  style={[
+                    styles.accountName,
+                    isSelected && styles.accountNameActive,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {account.name}
+                </Text>
               </TouchableOpacity>
             );
           })}
         </ScrollView>
       </View>
 
-      {/* Viewer Card */}
+      {/* Story Viewer Card */}
       <View style={styles.viewerCard}>
-        {/* Segmented Progress */}
         <View style={styles.progressRow}>
-          <View style={[styles.progressSegment, styles.progressDone]} />
-          <View style={[styles.progressSegment, styles.progressCurrent]} />
+          <View
+            style={[
+              styles.progressSegment,
+              { backgroundColor: activeAccount.accentColor },
+            ]}
+          />
+          <View style={styles.progressSegment} />
           <View style={styles.progressSegment} />
         </View>
 
         <View style={styles.viewerHeader}>
-          <View style={styles.smallAvatar}>
-            <Text style={styles.smallAvatarText}>PD</Text>
+          <View
+            style={[
+              styles.viewerAvatar,
+              { backgroundColor: `${activeAccount.accentColor}22` },
+            ]}
+          >
+            <Text
+              style={[
+                styles.viewerAvatarText,
+                { color: activeAccount.accentColor },
+              ]}
+            >
+              {activeAccount.initials}
+            </Text>
           </View>
-          <View>
-            <Text style={styles.viewerAuthor}>Product Design</Text>
-            <Text style={styles.viewerTime}>2h ago</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.viewerAuthor}>{activeAccount.name}</Text>
+            <Text style={styles.viewerTime}>{activeAccount.roleOrTime}</Text>
           </View>
         </View>
 
         <View style={styles.viewerCenter}>
           <View style={styles.captionBox}>
             <View style={styles.captionBadge}>
-              <Ionicons name="closed-captioning" size={14} color={Colors.cyanPrimary} />
+              <Ionicons
+                name="closed-captioning"
+                size={14}
+                color={Colors.cyanPrimary}
+              />
               <Text style={styles.captionBadgeText}>CAPTIONS ON</Text>
             </View>
-            <Text style={styles.captionCopy}>
-              New tokens are live — every accent now passes AA on the card surface.
-            </Text>
+            <Text style={styles.captionCopy}>{activeAccount.caption}</Text>
           </View>
         </View>
 
         <View style={styles.replyRow}>
           <TextInput
             style={styles.replyInput}
-            placeholder="Reply to Product Design..."
+            placeholder={`Reply to ${activeAccount.name}...`}
             placeholderTextColor={Colors.textSecondary}
             value={reply}
             onChangeText={setReply}
           />
-          <TouchableOpacity style={styles.sendBtn} onPress={() => setReply('')}>
+          <TouchableOpacity
+            style={styles.sendBtn}
+            activeOpacity={0.85}
+            onPress={() => setReply('')}
+          >
             <Ionicons name="send" size={18} color={Colors.base} />
           </TouchableOpacity>
         </View>
@@ -108,72 +225,140 @@ export default function StoriesScreen() {
   );
 }
 
+const topCameraOffset =
+  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.base },
-  header: {
-    paddingHorizontal: Spacing.gutter,
-    paddingTop: Spacing.gutter,
-    paddingBottom: Spacing.grid * 2,
+  container: {
+    flex: 1,
+    backgroundColor: Colors.base,
   },
-  title: { ...Typography.title, color: Colors.textPrimary },
-  subtitle: { ...Typography.label, color: Colors.textSecondary },
+  topBrandBar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: topCameraOffset,
+    paddingBottom: Spacing.grid * 2.5,
+  },
+  brandTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  whiteDivider: {
+    height: 1,
+    backgroundColor: '#FFFFFF',
+    opacity: 0.9,
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: Spacing.grid * 2.5,
+    paddingBottom: Spacing.grid,
+  },
+  sectionTitle: {
+    ...Typography.title,
+    color: Colors.textPrimary,
+  },
+  sectionSubtitle: {
+    ...Typography.label,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  railWrapper: {
+    paddingVertical: Spacing.grid * 1.5,
+  },
   ringRail: {
     paddingHorizontal: Spacing.gutter,
-    paddingVertical: Spacing.grid * 2,
-    gap: Spacing.gutter,
+    gap: Spacing.cardGap,
   },
-  ringItem: { alignItems: 'center', width: 64 },
-  ringCircle: {
-    width: 56,
-    height: 56,
+  accountColumn: {
+    width: 72,
+    alignItems: 'center',
+  },
+  ringOuter: {
+    width: 60,
+    height: 60,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.card,
     borderWidth: 2,
     borderColor: Colors.line,
+    padding: 3,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 6,
   },
-  ringCircleActive: { borderColor: Colors.cyanPrimary },
-  ringInitials: { ...Typography.bodyStrong, color: Colors.textPrimary },
-  ringLabel: { ...Typography.caption, color: Colors.textSecondary },
+  avatarInner: {
+    width: '100%',
+    height: '100%',
+    borderRadius: Spacing.radiusPill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    ...Typography.bodyStrong,
+    fontSize: 16,
+  },
+  accountName: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    width: '100%',
+  },
+  accountNameActive: {
+    color: Colors.textPrimary,
+    fontWeight: '700',
+  },
   viewerCard: {
     flex: 1,
-    margin: Spacing.gutter,
+    marginHorizontal: Spacing.gutter,
+    marginTop: Spacing.grid,
+    marginBottom: Spacing.gutter,
     backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusLg,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.line,
     padding: Spacing.cardPadding,
     justifyContent: 'space-between',
   },
-  progressRow: { flexDirection: 'row', gap: 6 },
+  progressRow: {
+    flexDirection: 'row',
+    gap: 6,
+  },
   progressSegment: {
     flex: 1,
     height: 3,
     borderRadius: 2,
     backgroundColor: Colors.line,
   },
-  progressDone: { backgroundColor: Colors.cyanPrimary },
-  progressCurrent: { backgroundColor: Colors.purpleAi },
   viewerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.grid * 2.5,
     marginTop: Spacing.cardGap,
   },
-  smallAvatar: {
-    width: 36,
-    height: 36,
+  viewerAvatar: {
+    width: 40,
+    height: 40,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: `${Colors.purpleAi}22`,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  smallAvatarText: { ...Typography.label, color: Colors.purpleAi, fontWeight: '700' },
-  viewerAuthor: { ...Typography.bodyStrong, color: Colors.textPrimary },
-  viewerTime: { ...Typography.caption, color: Colors.textSecondary },
-  viewerCenter: { flex: 1, justifyContent: 'flex-end', marginBottom: Spacing.gutter },
+  viewerAvatarText: {
+    ...Typography.label,
+    fontWeight: '700',
+  },
+  viewerAuthor: {
+    ...Typography.bodyStrong,
+    color: Colors.textPrimary,
+  },
+  viewerTime: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+  },
+  viewerCenter: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    marginBottom: Spacing.gutter,
+  },
   captionBox: {
     backgroundColor: Colors.surface,
     borderRadius: Spacing.radiusMd,
@@ -192,8 +377,14 @@ const styles = StyleSheet.create({
     color: Colors.cyanPrimary,
     fontWeight: '700',
   },
-  captionCopy: { ...Typography.body, color: Colors.textPrimary },
-  replyRow: { flexDirection: 'row', gap: Spacing.grid * 2 },
+  captionCopy: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+  },
+  replyRow: {
+    flexDirection: 'row',
+    gap: Spacing.grid * 2,
+  },
   replyInput: {
     flex: 1,
     minHeight: Spacing.minTapTarget,
