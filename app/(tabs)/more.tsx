@@ -2,8 +2,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
+  Platform,
   SafeAreaView,
   ScrollView,
+  StatusBar,
   StyleSheet,
   Switch,
   Text,
@@ -19,8 +21,21 @@ export default function MoreScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Top Centered Brand Header */}
+      <View style={styles.topBrandBar}>
+        <Text style={styles.brandTitle}>BizSphere</Text>
+      </View>
+
+      {/* White Divider */}
+      <View style={styles.whiteDivider} />
+
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>More</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>More</Text>
+          <Text style={styles.sectionSubtitle}>
+            Settings, accessibility & workspace
+          </Text>
+        </View>
 
         {/* Profile Card */}
         <View style={styles.card}>
@@ -37,7 +52,7 @@ export default function MoreScreen() {
         </View>
 
         {/* Appearance */}
-        <Text style={styles.sectionTitle}>APPEARANCE</Text>
+        <Text style={styles.sectionLabel}>APPEARANCE</Text>
         <View style={styles.card}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Theme</Text>
@@ -48,6 +63,7 @@ export default function MoreScreen() {
                   <TouchableOpacity
                     key={mode}
                     style={[styles.segBtn, active && styles.segBtnActive]}
+                    activeOpacity={0.85}
                     onPress={() => setThemeMode(mode)}
                   >
                     <Text
@@ -81,7 +97,7 @@ export default function MoreScreen() {
         </View>
 
         {/* Accessibility */}
-        <Text style={styles.sectionTitle}>ACCESSIBILITY</Text>
+        <Text style={styles.sectionLabel}>ACCESSIBILITY</Text>
         <View style={styles.card}>
           <View style={styles.row}>
             <Text style={styles.rowLabel}>Captions</Text>
@@ -101,9 +117,9 @@ export default function MoreScreen() {
         </View>
 
         {/* Account & Compliance */}
-        <Text style={styles.sectionTitle}>ACCOUNT & COMPLIANCE</Text>
+        <Text style={styles.sectionLabel}>ACCOUNT & COMPLIANCE</Text>
         <View style={styles.card}>
-          <TouchableOpacity style={styles.row}>
+          <TouchableOpacity style={styles.row} activeOpacity={0.85}>
             <Text style={styles.rowLabel}>Security & devices</Text>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>2</Text>
@@ -112,7 +128,7 @@ export default function MoreScreen() {
 
           <View style={styles.divider} />
 
-          <TouchableOpacity style={styles.row}>
+          <TouchableOpacity style={styles.row} activeOpacity={0.85}>
             <Text style={styles.rowLabel}>Export my data</Text>
             <Ionicons name="download-outline" size={20} color={Colors.textSecondary} />
           </TouchableOpacity>
@@ -122,22 +138,51 @@ export default function MoreScreen() {
   );
 }
 
+const topCameraOffset =
+  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.base },
-  content: { padding: Spacing.gutter, gap: Spacing.cardGap },
-  title: {
-    ...Typography.title,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.grid,
+  topBrandBar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: topCameraOffset,
+    paddingBottom: Spacing.grid * 2.5,
   },
-  sectionTitle: {
+  brandTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  whiteDivider: {
+    height: 1,
+    backgroundColor: '#FFFFFF',
+    opacity: 0.9,
+  },
+  content: {
+    paddingHorizontal: Spacing.gutter,
+    paddingBottom: Spacing.gutter * 2,
+    gap: Spacing.cardGap,
+  },
+  sectionHeader: {
+    paddingTop: Spacing.grid * 2.5,
+    paddingBottom: Spacing.grid,
+  },
+  sectionTitle: { ...Typography.title, color: Colors.textPrimary },
+  sectionSubtitle: {
+    ...Typography.label,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  sectionLabel: {
     ...Typography.caption,
     color: Colors.textSecondary,
     marginTop: Spacing.grid * 2,
   },
   card: {
     backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusLg,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.line,
     padding: Spacing.cardPadding,

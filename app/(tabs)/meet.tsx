@@ -2,7 +2,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
+  Platform,
   SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -25,9 +28,13 @@ export default function MeetScreen() {
   if (inCall) {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Weekly design review</Text>
-          <Text style={styles.subtitle}>12:04 · 4 participants</Text>
+        <View style={styles.topBrandBar}>
+          <Text style={styles.brandTitle}>BizSphere</Text>
+        </View>
+        <View style={styles.whiteDivider} />
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Weekly design review</Text>
+          <Text style={styles.sectionSubtitle}>12:04 · 4 participants</Text>
         </View>
 
         <View style={styles.grid}>
@@ -54,6 +61,7 @@ export default function MeetScreen() {
         <View style={styles.callControls}>
           <TouchableOpacity
             style={styles.controlCircle}
+            activeOpacity={0.85}
             onPress={() => setMicOn(!micOn)}
           >
             <Ionicons
@@ -64,6 +72,7 @@ export default function MeetScreen() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.controlCircle}
+            activeOpacity={0.85}
             onPress={() => setCamOn(!camOn)}
           >
             <Ionicons
@@ -72,11 +81,12 @@ export default function MeetScreen() {
               color={Colors.textPrimary}
             />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.controlCircle}>
+          <TouchableOpacity style={styles.controlCircle} activeOpacity={0.85}>
             <Ionicons name="hand-left-outline" size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.leaveBtn}
+            activeOpacity={0.85}
             onPress={() => setInCall(false)}
           >
             <Text style={styles.leaveText}>Leave</Text>
@@ -88,89 +98,129 @@ export default function MeetScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Meet</Text>
-        <Text style={styles.subtitle}>Ready to join</Text>
+      {/* Top Centered Brand Header */}
+      <View style={styles.topBrandBar}>
+        <Text style={styles.brandTitle}>BizSphere</Text>
       </View>
 
-      <View style={styles.previewCard}>
-        <View style={styles.previewAvatar}>
-          <Text style={styles.previewInitials}>You</Text>
+      {/* White Divider */}
+      <View style={styles.whiteDivider} />
+
+      {/* Section Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Meet</Text>
+        <Text style={styles.sectionSubtitle}>Ready to join</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.lobbyScroll}>
+        <View style={styles.previewCard}>
+          <View style={styles.previewAvatar}>
+            <Text style={styles.previewInitials}>You</Text>
+          </View>
+          <Text style={styles.previewLabel}>
+            {camOn ? 'Camera preview' : 'Camera is off'}
+          </Text>
         </View>
-        <Text style={styles.previewLabel}>
-          {camOn ? 'Camera preview' : 'Camera is off'}
-        </Text>
-      </View>
 
-      <View style={styles.lobbyToggles}>
+        <View style={styles.lobbyToggles}>
+          <TouchableOpacity
+            style={[styles.toggleBtn, micOn && styles.toggleBtnActive]}
+            activeOpacity={0.85}
+            onPress={() => setMicOn(!micOn)}
+          >
+            <Ionicons
+              name={micOn ? 'mic' : 'mic-off'}
+              size={22}
+              color={micOn ? Colors.base : Colors.textPrimary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.toggleBtn, camOn && styles.toggleBtnActive]}
+            activeOpacity={0.85}
+            onPress={() => setCamOn(!camOn)}
+          >
+            <Ionicons
+              name={camOn ? 'videocam' : 'videocam-off'}
+              size={22}
+              color={camOn ? Colors.base : Colors.textPrimary}
+            />
+          </TouchableOpacity>
+        </View>
+
         <TouchableOpacity
-          style={[styles.toggleBtn, micOn && styles.toggleBtnActive]}
-          onPress={() => setMicOn(!micOn)}
-        >
-          <Ionicons
-            name={micOn ? 'mic' : 'mic-off'}
-            size={22}
-            color={micOn ? Colors.base : Colors.textPrimary}
-          />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.toggleBtn, camOn && styles.toggleBtnActive]}
-          onPress={() => setCamOn(!camOn)}
-        >
-          <Ionicons
-            name={camOn ? 'videocam' : 'videocam-off'}
-            size={22}
-            color={camOn ? Colors.base : Colors.textPrimary}
-          />
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity
-        style={styles.joinBtn}
-        onPress={() => setInCall(true)}
-      >
-        <Text style={styles.joinBtnText}>Join now</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.linkBtn}>
-        <Ionicons name="link-outline" size={18} color={Colors.textSecondary} />
-        <Text style={styles.linkBtnText}>Join with a link or code</Text>
-      </TouchableOpacity>
-
-      <View style={styles.upcomingSection}>
-        <Text style={styles.sectionLabel}>STARTING SOON</Text>
-        <TouchableOpacity
-          style={styles.upcomingCard}
+          style={styles.joinBtn}
+          activeOpacity={0.85}
           onPress={() => setInCall(true)}
         >
-          <View style={styles.upcomingAvatar}>
-            <Text style={styles.upcomingInitials}>PD</Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.upcomingTitle}>Weekly design review</Text>
-            <Text style={styles.upcomingMeta}>10:00 · 5 people</Text>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+          <Text style={styles.joinBtnText}>Join now</Text>
         </TouchableOpacity>
-      </View>
+
+        <TouchableOpacity style={styles.linkBtn} activeOpacity={0.85}>
+          <Ionicons name="link-outline" size={18} color={Colors.textSecondary} />
+          <Text style={styles.linkBtnText}>Join with a link or code</Text>
+        </TouchableOpacity>
+
+        <View style={styles.upcomingSection}>
+          <Text style={styles.sectionLabel}>STARTING SOON</Text>
+          <TouchableOpacity
+            style={styles.upcomingCard}
+            activeOpacity={0.85}
+            onPress={() => setInCall(true)}
+          >
+            <View style={styles.upcomingAvatar}>
+              <Text style={styles.upcomingInitials}>PD</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.upcomingTitle}>Weekly design review</Text>
+              <Text style={styles.upcomingMeta}>10:00 · 5 people</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
+const topCameraOffset =
+  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.base },
-  header: {
+  topBrandBar: {
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: Spacing.gutter,
-    paddingTop: Spacing.gutter,
-    paddingBottom: Spacing.grid * 3,
+    paddingTop: topCameraOffset,
+    paddingBottom: Spacing.grid * 2.5,
   },
-  title: { ...Typography.title, color: Colors.textPrimary },
-  subtitle: { ...Typography.label, color: Colors.textSecondary },
+  brandTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  whiteDivider: {
+    height: 1,
+    backgroundColor: '#FFFFFF',
+    opacity: 0.9,
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: Spacing.grid * 2.5,
+    paddingBottom: Spacing.grid * 2,
+  },
+  sectionTitle: { ...Typography.title, color: Colors.textPrimary },
+  sectionSubtitle: {
+    ...Typography.label,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  lobbyScroll: { paddingBottom: Spacing.gutter * 2 },
   previewCard: {
-    height: 200,
+    height: 190,
     marginHorizontal: Spacing.gutter,
     backgroundColor: Colors.surface,
-    borderRadius: Spacing.radiusLg,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.line,
     alignItems: 'center',
@@ -242,7 +292,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.grid * 3,
     backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusLg,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.line,
     padding: Spacing.cardPadding,
@@ -262,14 +312,14 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    padding: Spacing.gutter,
+    paddingHorizontal: Spacing.gutter,
     gap: Spacing.cardGap,
   },
   tile: {
     width: '48%',
     height: '47%',
     backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusLg,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.line,
     alignItems: 'center',

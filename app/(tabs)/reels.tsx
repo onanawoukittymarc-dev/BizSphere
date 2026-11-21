@@ -2,7 +2,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
 import {
+  Platform,
   SafeAreaView,
+  StatusBar,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -16,7 +18,21 @@ export default function ReelsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Top Overlay */}
+      {/* Top Centered Brand Header */}
+      <View style={styles.topBrandBar}>
+        <Text style={styles.brandTitle}>BizSphere</Text>
+      </View>
+
+      {/* White Divider */}
+      <View style={styles.whiteDivider} />
+
+      {/* Section Header */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Reels</Text>
+        <Text style={styles.sectionSubtitle}>Short updates with captions on</Text>
+      </View>
+
+      {/* Top Overlay Controls */}
       <View style={styles.topBar}>
         <View style={styles.pillBadge}>
           <Ionicons name="sparkles" size={14} color={Colors.cyanPrimary} />
@@ -24,6 +40,7 @@ export default function ReelsScreen() {
         </View>
         <TouchableOpacity
           style={styles.pillBadge}
+          activeOpacity={0.85}
           onPress={() => setMuted(!muted)}
         >
           <Ionicons
@@ -35,9 +52,8 @@ export default function ReelsScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Main Content Area */}
+      {/* Main Content Stage */}
       <View style={styles.stage}>
-        {/* Burned-in Whisper Captions */}
         <View style={styles.captionOverlay}>
           <Text style={styles.burnedCaption}>
             “The first screen now asks one question, not five.”
@@ -48,6 +64,7 @@ export default function ReelsScreen() {
         <View style={styles.actionRail}>
           <TouchableOpacity
             style={styles.railBtn}
+            activeOpacity={0.85}
             onPress={() => setLiked(!liked)}
           >
             <Ionicons
@@ -57,7 +74,7 @@ export default function ReelsScreen() {
             />
             <Text style={styles.railCount}>{liked ? 249 : 248}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.railBtn}>
+          <TouchableOpacity style={styles.railBtn} activeOpacity={0.85}>
             <Ionicons
               name="chatbubble-outline"
               size={26}
@@ -65,7 +82,7 @@ export default function ReelsScreen() {
             />
             <Text style={styles.railCount}>31</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.railBtn}>
+          <TouchableOpacity style={styles.railBtn} activeOpacity={0.85}>
             <Ionicons
               name="share-social-outline"
               size={26}
@@ -92,12 +109,44 @@ export default function ReelsScreen() {
   );
 }
 
+const topCameraOffset =
+  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.base },
+  topBrandBar: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: topCameraOffset,
+    paddingBottom: Spacing.grid * 2.5,
+  },
+  brandTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+  },
+  whiteDivider: {
+    height: 1,
+    backgroundColor: '#FFFFFF',
+    opacity: 0.9,
+  },
+  sectionHeader: {
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: Spacing.grid * 2.5,
+    paddingBottom: Spacing.grid,
+  },
+  sectionTitle: { ...Typography.title, color: Colors.textPrimary },
+  sectionSubtitle: {
+    ...Typography.label,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    padding: Spacing.gutter,
+    paddingHorizontal: Spacing.gutter,
+    paddingVertical: Spacing.grid * 2,
   },
   pillBadge: {
     flexDirection: 'row',
@@ -113,10 +162,10 @@ const styles = StyleSheet.create({
   pillText: { ...Typography.label, color: Colors.textPrimary },
   stage: {
     flex: 1,
-    margin: Spacing.gutter,
-    marginTop: 0,
+    marginHorizontal: Spacing.gutter,
+    marginBottom: Spacing.gutter,
     backgroundColor: Colors.surface,
-    borderRadius: Spacing.radiusLg,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: Colors.line,
     padding: Spacing.cardPadding,
