@@ -1,335 +1,436 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, SafeAreaView, StyleSheet, TextInput } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+// app/(tabs)/index.tsx
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
+import {
+  FlatList,
+  Platform,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { StateView } from '../../components/StateView';
+import { Colors, Spacing, Typography } from '../../constants/theme';
 
-// Données fictives des discussions individuelles
-const INDIVIDUAL_CHATS = [
+interface ChatItem {
+  id: string;
+  name: string;
+  initials: string;
+  preview: string;
+  time: string;
+  unread: number;
+  isGroup: boolean;
+  avatarBg: string;
+}
+
+const CHATS_DATA: ChatItem[] = [
   {
-    id: '1',
-    name: 'Alexandre (Dev Lead)',
-    lastMessage: 'Le commit pour l API Supabase est pushé !',
-    time: '14:32',
-    unreadCount: 2,
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    id: '22222222-2222-2222-2222-222222222222',
+    name: 'Amina Mbarga',
+    initials: 'AM',
+    preview: 'The Q4 deck is ready — can ...',
+    time: '9:38',
+    unread: 2,
+    isGroup: false,
+    avatarBg: '#0E7490',
   },
   {
-    id: '2',
-    name: 'Sarah (Startup Founder)',
-    lastMessage: 'Dispo pour un call visio sur Agora ?',
-    time: '12:15',
-    unreadCount: 0,
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    id: '33333333-3333-3333-3333-333333333333',
+    name: 'Product Design',
+    initials: 'PD',
+    preview: 'Luc: pushed the new tokens ...',
+    time: '9:12',
+    unread: 1,
+    isGroup: true,
+    avatarBg: '#7C3AED',
+  },
+  {
+    id: '44444444-4444-4444-4444-444444444444',
+    name: 'Kodjo Owona',
+    initials: 'KO',
+    preview: 'Voice message · 0:24',
+    time: '8:55',
+    unread: 0,
+    isGroup: false,
+    avatarBg: '#059669',
+  },
+  {
+    id: '55555555-5555-5555-5555-555555555555',
+    name: 'Finance · Ops',
+    initials: 'FN',
+    preview: 'You: invoice approved, t...',
+    time: 'Yesterday',
+    unread: 0,
+    isGroup: true,
+    avatarBg: '#D97706',
+  },
+  {
+    id: '66666666-6666-6666-6666-666666666666',
+    name: 'Sarah Bell',
+    initials: 'SB',
+    preview: 'Can we move the call t...',
+    time: 'Yesterday',
+    unread: 0,
+    isGroup: false,
+    avatarBg: '#2563EB',
+  },
+  {
+    id: '77777777-7777-7777-7777-777777777777',
+    name: 'Amina Mbarga',
+    initials: 'AM',
+    preview: 'Perfect, sending it now.',
+    time: 'Mon',
+    unread: 0,
+    isGroup: false,
+    avatarBg: '#0891B2',
   },
 ];
 
-export default function TabIndex() {
-  // Par défaut, l'application s'ouvre sur les discussions individuelles (style WhatsApp)
-  const [currentTab, setCurrentTab] = useState('chats'); 
-  const [selectedChat, setSelectedChat] = useState<any>(null);
-  const [messages, setMessages] = useState([
-    { id: '1', text: 'Salut ! Bien reçu pour le setup Supabase.', sender: 'other' },
-    { id: '2', text: 'Impec, je m occupe de la partie UI maintenant.', sender: 'me' }
-  ]);
-  const [inputText, setInputText] = useState('');
+export default function ChatsScreen() {
+  const router = useRouter();
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState<'All' | 'Direct' | 'Groups'>('All');
 
-  const sendMessage = () => {
-    if (inputText.trim() === '') return;
-    setMessages([...messages, { id: Date.now().toString(), text: inputText, sender: 'me' }]);
-    setInputText('');
-  };
+  const filteredChats = useMemo(() => {
+    return CHATS_DATA.filter((item) => {
+      const matchesFilter =
+        filter === 'All' ||
+        (filter === 'Direct' && !item.isGroup) ||
+        (filter === 'Groups' && item.isGroup);
+      const q = search.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        item.preview.toLowerCase().includes(q);
+      return matchesFilter && matchesSearch;
+    });
+  }, [search, filter]);
 
-  // --- VUE DISCUSSION OUVERTE ---
-  if (selectedChat) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.chatHeader}>
-          <TouchableOpacity onPress={() => setSelectedChat(null)} style={styles.backBtn}>
-            <Ionicons name="arrow-back" size={24} color="#F8FAFC" />
-          </TouchableOpacity>
-          <Image source={{ uri: selectedChat.avatar }} style={styles.chatAvatar} />
-          <Text style={styles.chatTitle}>{selectedChat.name}</Text>
-        </View>
-
-        <FlatList
-          data={messages}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <View style={[styles.bubbleWrapper, item.sender === 'me' ? styles.bubbleMe : styles.bubbleOther]}>
-              <Text style={styles.bubbleText}>{item.text}</Text>
-            </View>
-          )}
-          contentContainerStyle={{ padding: 16, flexGrow: 1, justifyContent: 'flex-end' }}
-        />
-
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            placeholder="Écrire un message..."
-            placeholderTextColor="#64748B"
-            value={inputText}
-            onChangeText={setInputText}
-          />
-          <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-            <Ionicons name="send" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // --- VUE PRINCIPALE ---
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header supérieur de navigation */}
-      <View style={styles.headerContainer}>
-        <TouchableOpacity 
-          onPress={() => setCurrentTab('chats')} 
-          style={[styles.iconBtn, currentTab === 'chats' && styles.activeIconBtn]}
-        >
-          <Ionicons name="chatbubbles-outline" size={24} color={currentTab === 'chats' ? '#3B82F6' : '#64748B'} />
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          onPress={() => setCurrentTab('groups')} 
-          style={[styles.iconBtn, currentTab === 'groups' && styles.activeIconBtn]}
-        >
-          <Ionicons name="people-outline" size={24} color={currentTab === 'groups' ? '#3B82F6' : '#64748B'} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={() => setCurrentTab('stories')} 
-          style={[styles.iconBtn, currentTab === 'stories' && styles.activeIconBtn]}
-        >
-          <Ionicons name="ellipse-outline" size={24} color={currentTab === 'stories' ? '#8B5CF6' : '#64748B'} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={() => setCurrentTab('reels')} 
-          style={[styles.iconBtn, currentTab === 'reels' && styles.activeIconBtn]}
-        >
-          <MaterialCommunityIcons name="movie-play-outline" size={24} color={currentTab === 'reels' ? '#3B82F6' : '#64748B'} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={() => setCurrentTab('visio')} 
-          style={[styles.iconBtn, currentTab === 'visio' && styles.activeIconBtn]}
-        >
-          <Ionicons name="videocam-outline" size={24} color={currentTab === 'visio' ? '#3B82F6' : '#64748B'} />
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          onPress={() => setCurrentTab('settings')} 
-          style={[styles.iconBtn, currentTab === 'settings' && styles.activeIconBtn]}
-        >
-          <Ionicons name="settings-outline" size={24} color={currentTab === 'settings' ? '#3B82F6' : '#64748B'} />
-        </TouchableOpacity>
+      {/* Top Centered Brand Header */}
+      <View style={styles.topBrandBar}>
+        <Text style={styles.brandTitle}>BizSphere</Text>
       </View>
 
-      {/* Contenu de l'onglet : Discussions Individuelles */}
-      {currentTab === 'chats' && (
-        <FlatList
-          data={INDIVIDUAL_CHATS}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity 
-              style={styles.card} 
-              activeOpacity={0.7} 
-              onPress={() => setSelectedChat(item)}
-            >
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-              
-              <View style={styles.infoContainer}>
-                <View style={styles.headerRow}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.time}>{item.time}</Text>
-                </View>
-                
-                <View style={styles.messageRow}>
-                  <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage}
-                  </Text>
-                  {item.unreadCount > 0 && (
-                    <View style={styles.badge}>
-                      <Text style={styles.badgeText}>{item.unreadCount}</Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={{ paddingTop: 10, paddingBottom: 20 }}
-        />
-      )}
+      {/* White Divider Between BizSphere and Chats */}
+      <View style={styles.whiteDivider} />
 
-      {/* Vues temporaires pour les autres onglets */}
-      {currentTab !== 'chats' && (
-        <View style={styles.centeredView}>
-          <Text style={styles.placeholderText}>Section {currentTab.toUpperCase()} en cours de chargement...</Text>
-        </View>
-      )}
+      {/* Original Chats Section Header */}
+      <View style={styles.chatsHeader}>
+        <Text style={styles.chatsTitle}>Chats</Text>
+        <Text style={styles.chatsSubtitle}>4 unread · 2 mentions</Text>
+      </View>
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Ionicons name="search" size={18} color={Colors.textSecondary} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search people, groups, messages"
+          placeholderTextColor={Colors.textSecondary}
+          value={search}
+          onChangeText={setSearch}
+        />
+      </View>
+
+      {/* Segmented Filter Bar */}
+      <View style={styles.segmentContainer}>
+        {(['All', 'Direct', 'Groups'] as const).map((tab) => {
+          const isActive = filter === tab;
+          return (
+            <TouchableOpacity
+              key={tab}
+              style={[styles.segmentTab, isActive && styles.segmentTabActive]}
+              onPress={() => setFilter(tab)}
+            >
+              <Text
+                style={[styles.segmentText, isActive && styles.segmentTextActive]}
+              >
+                {tab}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* Chat Cards List */}
+      <FlatList
+        data={filteredChats}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          <StateView
+            icon="search-outline"
+            title="Aucune conversation trouvée"
+            description="Essaie un autre mot-clé ou réinitialise les filtres."
+            actionLabel="Réinitialiser"
+            onAction={() => {
+              setSearch('');
+              setFilter('All');
+            }}
+          />
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.chatCard}
+            activeOpacity={0.85}
+            onPress={() =>
+              router.push({
+                pathname: '/chat/[id]',
+                params: { id: item.id, name: item.name },
+              })
+            }
+          >
+            <View style={[styles.avatar, { backgroundColor: item.avatarBg }]}>
+              <Text style={styles.avatarText}>{item.initials}</Text>
+            </View>
+
+            <View style={styles.cardBody}>
+              <View style={styles.cardTopRow}>
+                <Text style={styles.chatName} numberOfLines={1}>
+                  {item.name}
+                </Text>
+                <Text style={styles.chatTime}>{item.time}</Text>
+              </View>
+
+              <View style={styles.cardBottomRow}>
+                <Text style={styles.chatPreview} numberOfLines={1}>
+                  {item.preview}
+                </Text>
+                {item.unread > 0 && (
+                  <View style={styles.unreadBadge}>
+                    <Text style={styles.unreadText}>{item.unread}</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </TouchableOpacity>
+        )}
+      />
+
+      {/* Floating AI Assistant Button Just Above New Chat FAB */}
+      <TouchableOpacity
+        style={styles.aiFab}
+        activeOpacity={0.85}
+        onPress={() =>
+          router.push({
+            pathname: '/chat/[id]',
+            params: {
+              id: '22222222-2222-2222-2222-222222222222',
+              name: 'IA Assistant',
+            },
+          })
+        }
+      >
+        <Ionicons name="sparkles" size={24} color={Colors.base} />
+      </TouchableOpacity>
+
+      {/* Floating Cyan Add Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.85}
+        onPress={() =>
+          router.push({
+            pathname: '/chat/[id]',
+            params: {
+              id: '22222222-2222-2222-2222-222222222222',
+              name: 'Nouvelle discussion',
+            },
+          })
+        }
+      >
+        <Ionicons name="add" size={30} color={Colors.base} />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
+const topCameraOffset =
+  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0B0F19',
+    backgroundColor: Colors.base,
   },
-  headerContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  topBrandBar: {
     alignItems: 'center',
-    paddingVertical: 12,
-    backgroundColor: '#0B0F19',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
+    justifyContent: 'center',
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: topCameraOffset,
+    paddingBottom: Spacing.grid * 2.5,
   },
-  iconBtn: {
-    padding: 8,
-    borderRadius: 12,
+  brandTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    textAlign: 'center',
   },
-  activeIconBtn: {
-    backgroundColor: '#1E293B',
+  whiteDivider: {
+    height: 1,
+    backgroundColor: '#FFFFFF',
+    opacity: 0.9,
   },
-  card: {
+  chatsHeader: {
+    paddingHorizontal: Spacing.gutter,
+    paddingTop: Spacing.grid * 2.5,
+    paddingBottom: Spacing.grid * 2,
+  },
+  chatsTitle: {
+    ...Typography.title,
+    color: Colors.textPrimary,
+  },
+  chatsSubtitle: {
+    ...Typography.label,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  searchContainer: {
     flexDirection: 'row',
-    backgroundColor: '#1E293B',
-    borderRadius: 18, // Bords bien arrondis
-    padding: 14,
-    marginHorizontal: 16,
-    marginVertical: 8, // Espace vide marqué qui sépare chaque carte
     alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderRadius: Spacing.radiusLg,
     borderWidth: 1,
-    borderColor: '#334155',
+    borderColor: Colors.line,
+    marginHorizontal: Spacing.gutter,
+    paddingHorizontal: Spacing.gutter,
+    height: 48,
+  },
+  searchInput: {
+    flex: 1,
+    ...Typography.body,
+    color: Colors.textPrimary,
+    marginLeft: Spacing.grid * 2,
+  },
+  segmentContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderRadius: Spacing.radiusLg,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    marginHorizontal: Spacing.gutter,
+    marginTop: Spacing.cardGap,
+    marginBottom: Spacing.cardGap,
+    padding: 4,
+  },
+  segmentTab: {
+    flex: 1,
+    height: 36,
+    borderRadius: Spacing.radiusMd,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  segmentTabActive: {
+    backgroundColor: '#253349',
+  },
+  segmentText: {
+    ...Typography.bodyStrong,
+    color: Colors.textSecondary,
+    fontSize: 15,
+  },
+  segmentTextActive: {
+    color: Colors.textPrimary,
+  },
+  listContent: {
+    paddingHorizontal: Spacing.gutter,
+    paddingBottom: 155,
+    gap: Spacing.cardGap,
+  },
+  chatCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.card,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    padding: Spacing.cardPadding,
   },
   avatar: {
     width: 52,
     height: 52,
-    borderRadius: 26,
-    marginRight: 14,
+    borderRadius: Spacing.radiusPill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.cardGap,
   },
-  infoContainer: {
+  avatarText: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    fontSize: 18,
+  },
+  cardBody: {
     flex: 1,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  name: {
-    color: '#F8FAFC',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  time: {
-    color: '#64748B',
-    fontSize: 12,
-  },
-  messageRow: {
+  cardTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 4,
   },
-  lastMessage: {
-    color: '#94A3B8',
-    fontSize: 14,
+  chatName: {
+    ...Typography.bodyStrong,
+    color: Colors.textPrimary,
+    fontSize: 17,
     flex: 1,
     marginRight: 8,
   },
-  badge: {
-    backgroundColor: '#3B82F6',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
+  chatTime: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    fontSize: 13,
+  },
+  cardBottomRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  chatPreview: {
+    ...Typography.label,
+    color: Colors.textSecondary,
+    fontSize: 15,
+    flex: 1,
+    marginRight: 8,
+  },
+  unreadBadge: {
+    backgroundColor: Colors.cyanPrimary,
+    minWidth: 24,
+    height: 24,
+    borderRadius: Spacing.radiusPill,
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingHorizontal: 6,
   },
-  badgeText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: 'bold',
+  unreadText: {
+    ...Typography.caption,
+    color: Colors.base,
+    fontWeight: '700',
   },
-  centeredView: {
-    flex: 1,
+  aiFab: {
+    position: 'absolute',
+    right: Spacing.gutter * 1.25 + 6,
+    bottom: Spacing.gutter * 1.5 + 76,
+    width: 52,
+    height: 52,
+    borderRadius: Spacing.radiusPill,
+    backgroundColor: Colors.purpleAi,
+    alignItems: 'center',
     justifyContent: 'center',
+    elevation: 6,
+  },
+  fab: {
+    position: 'absolute',
+    right: Spacing.gutter * 1.25,
+    bottom: Spacing.gutter * 1.5,
+    width: 64,
+    height: 64,
+    borderRadius: Spacing.radiusPill,
+    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  placeholderText: {
-    color: '#94A3B8',
-    fontSize: 16,
-    textAlign: 'center',
-  },
-  chatHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#1E293B',
-    backgroundColor: '#0B0F19',
-  },
-  backBtn: {
-    marginRight: 12,
-  },
-  chatAvatar: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
-    marginRight: 10,
-  },
-  chatTitle: {
-    color: '#F8FAFC',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  bubbleWrapper: {
-    padding: 12,
-    borderRadius: 16,
-    marginVertical: 4,
-    maxWidth: '75%',
-  },
-  bubbleMe: {
-    backgroundColor: '#3B82F6',
-    alignSelf: 'flex-end',
-    borderBottomRightRadius: 4,
-  },
-  bubbleOther: {
-    backgroundColor: '#1E293B',
-    alignSelf: 'flex-start',
-    borderBottomLeftRadius: 4,
-  },
-  bubbleText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 12,
-    backgroundColor: '#0B0F19',
-    borderTopWidth: 1,
-    borderTopColor: '#1E293B',
-    alignItems: 'center',
-  },
-  input: {
-    flex: 1,
-    backgroundColor: '#1E293B',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    color: '#F8FAFC',
-    fontSize: 15,
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#334155',
-  },
-  sendButton: {
-    backgroundColor: '#3B82F6',
     justifyContent: 'center',
-    alignItems: 'center',
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    elevation: 6,
   },
 });
