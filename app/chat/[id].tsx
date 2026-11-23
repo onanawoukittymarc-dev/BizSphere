@@ -1,348 +1,264 @@
 // app/chat/[id].tsx
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
   SafeAreaView,
-  ScrollView,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { StateView } from '../../components/StateView';
 import { Colors, Spacing, Typography } from '../../constants/theme';
+import { ChatMessage, useChats } from '../../src/store/chatStore';
 
-export default function ConversationScreen() {
-  const { name } = useLocalSearchParams<{ id: string; name: string }>();
+export default function ChatDetailScreen() {
   const router = useRouter();
-  const [message, setMessage] = useState('');
-  const [showAiBlock, setShowAiBlock] = useState(true);
-  const [isOffline, setIsOffline] = useState(false);
+  const params = useLocalSearchParams<{
+    id?: string;
+    name?: string;
+    draft?: string;
+  }>();
 
-  const smartReply =
-    "Agreed — I'll cut slide 6 to a single revenue line and move the segment breakdown to the appendix.";
+  const chatId = params.id ?? '22222222-2222-2222-2222-222222222222';
+  const { threads, messagesByChat, markAsRead, sendMessage } = useChats();
+
+  const currentThread = threads.find((t) => t.id === chatId);
+  const titleName = params.name ?? currentThread?.name ?? 'Conversation';
+
+  const [draft, setDraft] = useState(params.draft ?? '');
+  const listRef = useRef<FlatList<ChatMessage>>(null);
+
+  const messages = messagesByChat[chatId] ?? [];
+
+  useEffect(() => {
+    markAsRead(chatId);
+  }, [chatId, markAsRead]);
+
+  useEffect(() => {
+    if (params.draft) {
+      setDraft(params.draft);
+    }
+  }, [params.draft]);
+
+  const handleSend = () => {
+    if (!draft.trim()) return;
+    sendMessage(chatId, draft);
+    setDraft('');
+    setTimeout(() => {
+      listRef.current?.scrollToEnd({ animated: true });
+    }, 80);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
+      {/* Top Header */}
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.iconBtn}
+          style={styles.backBtn}
+          activeOpacity={0.85}
           onPress={() => router.back()}
-          accessibilityLabel="Back"
         >
-          <Ionicons name="chevron-back" size={24} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>AM</Text>
+
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {titleName}
+          </Text>
+          <Text style={styles.headerSub}>
+            {currentThread?.isGroup ? 'Group channel' : 'Direct message'}
+          </Text>
         </View>
-        <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>{name || 'Amina Mbarga'}</Text>
-          <Text style={styles.headerSub}>Online</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={() => router.push('/(tabs)/meet')}
-          accessibilityLabel="Video call"
-        >
-          <Ionicons name="videocam-outline" size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.iconBtn}
-          onPress={() => setIsOffline(!isOffline)}
-          accessibilityLabel="Toggle offline state"
-        >
-          <Ionicons name="ellipsis-vertical" size={20} color={Colors.textPrimary} />
-        </TouchableOpacity>
+
+        <View style={styles.rightSpacer} />
       </View>
 
-      {/* Offline Banner (Screen 09) */}
-      {isOffline && (
-        <View style={styles.offlineBanner}>
-          <Ionicons name="cloud-offline-outline" size={16} color={Colors.warning} />
-          <Text style={styles.offlineText}>
-            You're offline — messages will send when you reconnect
-          </Text>
-        </View>
-      )}
+      <View style={styles.whiteDivider} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={styles.dateDivider}>TODAY</Text>
-
-        {/* Incoming Bubble */}
-        <View style={styles.incomingBubble}>
-          <Text style={styles.senderTag}>Amina</Text>
-          <Text style={styles.bubbleText}>
-            Morning — did you get a chance to look at the Q4 deck?
-          </Text>
-          <Text style={styles.timeText}>9:31</Text>
-        </View>
-
-        {/* Outgoing Bubble */}
-        <View style={styles.outgoingBubble}>
-          <Text style={styles.bubbleText}>
-            Yes, halfway through. Slide 6 is the one I want to talk about.
-          </Text>
-          <Text style={styles.timeTextOutgoing}>9:33 ✓✓</Text>
-        </View>
-
-        {/* Voice Note + Whisper Transcript */}
-        <View style={styles.incomingBubble}>
-          <Text style={styles.bubbleText}>
-            Same. The revenue chart is doing too much.
-          </Text>
-          <Text style={styles.timeText}>9:34</Text>
-        </View>
-
-        <View style={styles.incomingBubble}>
-          <View style={styles.voiceRow}>
-            <TouchableOpacity style={styles.playBtn}>
-              <Ionicons name="play" size={16} color={Colors.base} />
-            </TouchableOpacity>
-            <View style={styles.waveformPlaceholder}>
-              <View style={styles.waveBarActive} />
-              <View style={styles.waveBarIdle} />
-            </View>
-            <Text style={styles.timeText}>0:24</Text>
-          </View>
-          <Text style={styles.transcriptText}>
-            "Let's cut it to one line and put the breakdown in the appendix."
-          </Text>
-        </View>
-
-        {/* AI Block — Attributable & Explicit Insert (Screen 02 & 07) */}
-        {showAiBlock && (
-          <View style={styles.aiCard}>
-            <View style={styles.aiHeader}>
-              <View style={styles.aiBadgeRow}>
-                <Ionicons name="sparkles" size={14} color={Colors.purpleAi} />
-                <Text style={styles.aiBadgeText}>AI-GENERATED · SMART REPLY</Text>
-              </View>
-              <TouchableOpacity onPress={() => setShowAiBlock(false)}>
-                <Ionicons name="close" size={18} color={Colors.textSecondary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.aiContent}>{smartReply}</Text>
-            <View style={styles.aiActions}>
-              <TouchableOpacity
-                style={styles.aiPrimaryBtn}
-                onPress={() => setMessage(smartReply)}
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <FlatList
+          ref={listRef}
+          data={messages}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.messagesContent}
+          ListEmptyComponent={
+            <StateView
+              variant="empty"
+              icon="chatbubbles-outline"
+              title="Aucun message dans ce fil"
+              description="Envoie le premier message pour démarrer la discussion."
+            />
+          }
+          renderItem={({ item }) => {
+            const isMe = item.sender === 'me';
+            return (
+              <View
+                style={[
+                  styles.bubble,
+                  isMe ? styles.myBubble : styles.otherBubble,
+                ]}
               >
-                <Text style={styles.aiPrimaryBtnText}>Insert as my message</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.aiSecondaryBtn}>
-                <Text style={styles.aiSecondaryBtnText}>Regenerate</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        )}
-      </ScrollView>
-
-      {/* Composer */}
-      <View style={styles.composer}>
-        <TouchableOpacity style={styles.iconBtn}>
-          <Ionicons name="add" size={24} color={Colors.textSecondary} />
-        </TouchableOpacity>
-        <TextInput
-          style={styles.input}
-          placeholder="Message"
-          placeholderTextColor={Colors.textSecondary}
-          value={message}
-          onChangeText={setMessage}
+                {!isMe && item.senderName && (
+                  <Text style={styles.senderLabel}>{item.senderName}</Text>
+                )}
+                <Text style={styles.bubbleText}>{item.text}</Text>
+                <Text style={styles.bubbleTime}>
+                  {item.time} {isMe ? '✓✓' : ''}
+                </Text>
+              </View>
+            );
+          }}
         />
-        <TouchableOpacity style={styles.iconBtn}>
-          <Ionicons name="mic-outline" size={22} color={Colors.textSecondary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.sendBtn} onPress={() => setMessage('')}>
-          <Ionicons name="send" size={18} color={Colors.base} />
-        </TouchableOpacity>
-      </View>
+
+        {/* Composer */}
+        <View style={styles.composerBar}>
+          <TextInput
+            style={styles.input}
+            placeholder="Write a message..."
+            placeholderTextColor={Colors.textSecondary}
+            value={draft}
+            onChangeText={setDraft}
+            multiline
+          />
+          <TouchableOpacity
+            style={styles.sendBtn}
+            activeOpacity={0.85}
+            onPress={handleSend}
+          >
+            <Ionicons name="send" size={20} color={Colors.base} />
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
+const topCameraOffset =
+  Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 12 : 16;
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.base },
+  container: {
+    flex: 1,
+    backgroundColor: Colors.base,
+  },
+  flex: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: Spacing.grid * 2,
-    paddingVertical: Spacing.grid * 2.5,
-    backgroundColor: Colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.line,
-  },
-  iconBtn: {
-    width: Spacing.minTapTarget,
-    height: Spacing.minTapTarget,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatar: {
-    width: 38,
-    height: 38,
-    borderRadius: Spacing.radiusPill,
-    backgroundColor: `${Colors.cyanPrimary}22`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.grid * 2.5,
-  },
-  avatarText: { ...Typography.label, color: Colors.cyanPrimary, fontWeight: '700' },
-  headerInfo: { flex: 1 },
-  headerTitle: { ...Typography.bodyStrong, color: Colors.textPrimary },
-  headerSub: { ...Typography.caption, color: Colors.success },
-  offlineBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.grid * 2,
-    backgroundColor: `${Colors.warning}1A`,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.warning,
+    justifyContent: 'space-between',
     paddingHorizontal: Spacing.gutter,
-    paddingVertical: Spacing.grid * 2,
+    paddingTop: topCameraOffset,
+    paddingBottom: Spacing.grid * 2,
   },
-  offlineText: { ...Typography.caption, color: Colors.warning, flex: 1 },
-  scrollContent: { padding: Spacing.gutter, gap: Spacing.cardGap },
-  dateDivider: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-    marginVertical: Spacing.grid,
-  },
-  incomingBubble: {
-    alignSelf: 'flex-start',
-    maxWidth: '82%',
-    backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusLg,
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: Spacing.radiusPill,
+    backgroundColor: Colors.surface,
     borderWidth: 1,
     borderColor: Colors.line,
-    padding: Spacing.cardPadding * 0.75,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  outgoingBubble: {
-    alignSelf: 'flex-end',
-    maxWidth: '82%',
-    backgroundColor: '#13313D',
-    borderRadius: Spacing.radiusLg,
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: 8,
+  },
+  headerTitle: {
+    ...Typography.heading,
+    color: Colors.textPrimary,
+    fontSize: 18,
+  },
+  headerSub: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  rightSpacer: {
+    width: 40,
+  },
+  whiteDivider: {
+    height: 1,
+    backgroundColor: '#FFFFFF',
+    opacity: 0.9,
+  },
+  messagesContent: {
+    padding: Spacing.gutter,
+    paddingBottom: 24,
+    gap: 12,
+    flexGrow: 1,
+  },
+  bubble: {
+    maxWidth: '84%',
+    borderRadius: 18,
+    padding: Spacing.cardPadding,
     borderWidth: 1,
-    borderColor: `${Colors.cyanPrimary}44`,
-    padding: Spacing.cardPadding * 0.75,
   },
-  senderTag: {
+  myBubble: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#123846',
+    borderColor: '#1F637A',
+  },
+  otherBubble: {
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.card,
+    borderColor: Colors.line,
+  },
+  senderLabel: {
     ...Typography.caption,
     color: Colors.cyanPrimary,
+    fontWeight: '700',
     marginBottom: 4,
   },
-  bubbleText: { ...Typography.body, color: Colors.textPrimary },
-  timeText: {
+  bubbleText: {
+    ...Typography.body,
+    color: Colors.textPrimary,
+  },
+  bubbleTime: {
     ...Typography.caption,
     color: Colors.textSecondary,
     alignSelf: 'flex-end',
-    marginTop: 4,
+    marginTop: 6,
   },
-  timeTextOutgoing: {
-    ...Typography.caption,
-    color: Colors.cyanPrimary,
-    alignSelf: 'flex-end',
-    marginTop: 4,
-  },
-  voiceRow: {
+  composerBar: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.grid * 2.5,
-    marginBottom: Spacing.grid * 2,
-  },
-  playBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.cyanPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  waveformPlaceholder: {
-    flex: 1,
-    height: 4,
-    backgroundColor: Colors.line,
-    borderRadius: 2,
-    flexDirection: 'row',
-  },
-  waveBarActive: {
-    width: '45%',
-    backgroundColor: Colors.cyanPrimary,
-    borderRadius: 2,
-  },
-  waveBarIdle: { flex: 1 },
-  transcriptText: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-    fontStyle: 'italic',
-  },
-  aiCard: {
-    backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusLg,
-    borderWidth: 1,
-    borderColor: Colors.purpleAi,
-    padding: Spacing.cardPadding,
-    marginTop: Spacing.grid,
-  },
-  aiHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: Spacing.grid * 2,
-  },
-  aiBadgeRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  aiBadgeText: {
-    ...Typography.caption,
-    color: Colors.purpleAi,
-    fontWeight: '700',
-  },
-  aiContent: { ...Typography.body, color: Colors.textPrimary, marginBottom: Spacing.cardGap },
-  aiActions: { flexDirection: 'row', gap: Spacing.grid * 2 },
-  aiPrimaryBtn: {
-    flex: 1,
-    minHeight: Spacing.minTapTarget,
-    backgroundColor: Colors.purpleAi,
-    borderRadius: Spacing.radiusMd,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.grid * 3,
-  },
-  aiPrimaryBtnText: { ...Typography.label, color: Colors.base, fontWeight: '700' },
-  aiSecondaryBtn: {
-    minHeight: Spacing.minTapTarget,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.line,
-    borderRadius: Spacing.radiusMd,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: Spacing.grid * 3,
-  },
-  aiSecondaryBtnText: { ...Typography.label, color: Colors.textPrimary },
-  composer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: Spacing.grid * 2,
+    alignItems: 'flex-end',
+    gap: 10,
+    paddingHorizontal: Spacing.gutter,
     paddingVertical: Spacing.grid * 2,
-    backgroundColor: Colors.surface,
     borderTopWidth: 1,
     borderTopColor: Colors.line,
-    gap: Spacing.grid,
+    backgroundColor: Colors.surface,
   },
   input: {
     flex: 1,
-    minHeight: Spacing.minTapTarget,
+    minHeight: 44,
+    maxHeight: 110,
     backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusPill,
+    borderWidth: 1,
+    borderColor: Colors.line,
+    borderRadius: 20,
     paddingHorizontal: Spacing.gutter,
+    paddingVertical: 10,
     ...Typography.body,
     color: Colors.textPrimary,
   },
   sendBtn: {
-    width: Spacing.minTapTarget,
-    height: Spacing.minTapTarget,
+    width: 46,
+    height: 46,
     borderRadius: Spacing.radiusPill,
     backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
