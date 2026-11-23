@@ -15,11 +15,14 @@ import {
   View,
 } from 'react-native';
 import { StateView } from '../../components/StateView';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { Spacing, Typography } from '../../constants/theme';
 import { ChatMessage, useChats } from '../../src/store/chatStore';
+import { useAppTheme } from '../../src/store/themeStore';
 
 export default function ChatDetailScreen() {
   const router = useRouter();
+  const { colors } = useAppTheme();
+
   const params = useLocalSearchParams<{
     id?: string;
     name?: string;
@@ -57,22 +60,27 @@ export default function ChatDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Top Header */}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.base }]}>
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backBtn}
+          style={[
+            styles.backBtn,
+            { backgroundColor: colors.surface, borderColor: colors.line },
+          ]}
           activeOpacity={0.85}
           onPress={() => router.back()}
         >
-          <Ionicons name="arrow-back" size={22} color={Colors.textPrimary} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
 
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle} numberOfLines={1}>
+          <Text
+            style={[styles.headerTitle, { color: colors.textPrimary }]}
+            numberOfLines={1}
+          >
             {titleName}
           </Text>
-          <Text style={styles.headerSub}>
+          <Text style={[styles.headerSub, { color: colors.textSecondary }]}>
             {currentThread?.isGroup ? 'Group channel' : 'Direct message'}
           </Text>
         </View>
@@ -80,7 +88,9 @@ export default function ChatDetailScreen() {
         <View style={styles.rightSpacer} />
       </View>
 
-      <View style={styles.whiteDivider} />
+      <View
+        style={[styles.whiteDivider, { backgroundColor: colors.divider }]}
+      />
 
       <KeyboardAvoidingView
         style={styles.flex}
@@ -105,14 +115,34 @@ export default function ChatDetailScreen() {
               <View
                 style={[
                   styles.bubble,
-                  isMe ? styles.myBubble : styles.otherBubble,
+                  isMe
+                    ? {
+                        alignSelf: 'flex-end',
+                        backgroundColor: colors.myBubbleBg,
+                        borderColor: colors.myBubbleBorder,
+                      }
+                    : {
+                        alignSelf: 'flex-start',
+                        backgroundColor: colors.card,
+                        borderColor: colors.line,
+                      },
                 ]}
               >
                 {!isMe && item.senderName && (
-                  <Text style={styles.senderLabel}>{item.senderName}</Text>
+                  <Text
+                    style={[styles.senderLabel, { color: colors.cyanPrimary }]}
+                  >
+                    {item.senderName}
+                  </Text>
                 )}
-                <Text style={styles.bubbleText}>{item.text}</Text>
-                <Text style={styles.bubbleTime}>
+                <Text
+                  style={[styles.bubbleText, { color: colors.textPrimary }]}
+                >
+                  {item.text}
+                </Text>
+                <Text
+                  style={[styles.bubbleTime, { color: colors.textSecondary }]}
+                >
                   {item.time} {isMe ? '✓✓' : ''}
                 </Text>
               </View>
@@ -120,22 +150,36 @@ export default function ChatDetailScreen() {
           }}
         />
 
-        {/* Composer */}
-        <View style={styles.composerBar}>
+        <View
+          style={[
+            styles.composerBar,
+            {
+              borderTopColor: colors.line,
+              backgroundColor: colors.surface,
+            },
+          ]}
+        >
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.line,
+                color: colors.textPrimary,
+              },
+            ]}
             placeholder="Write a message..."
-            placeholderTextColor={Colors.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             value={draft}
             onChangeText={setDraft}
             multiline
           />
           <TouchableOpacity
-            style={styles.sendBtn}
+            style={[styles.sendBtn, { backgroundColor: colors.cyanPrimary }]}
             activeOpacity={0.85}
             onPress={handleSend}
           >
-            <Ionicons name="send" size={20} color={Colors.base} />
+            <Ionicons name="send" size={20} color="#080F13" />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -147,13 +191,8 @@ const topCameraOffset =
   Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 12 : 16;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.base,
-  },
-  flex: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  flex: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -166,9 +205,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -177,24 +214,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 8,
   },
-  headerTitle: {
-    ...Typography.heading,
-    color: Colors.textPrimary,
-    fontSize: 18,
-  },
-  headerSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  rightSpacer: {
-    width: 40,
-  },
-  whiteDivider: {
-    height: 1,
-    backgroundColor: '#FFFFFF',
-    opacity: 0.9,
-  },
+  headerTitle: { ...Typography.heading, fontSize: 18 },
+  headerSub: { ...Typography.caption, marginTop: 2 },
+  rightSpacer: { width: 40 },
+  whiteDivider: { height: 1, opacity: 0.9 },
   messagesContent: {
     padding: Spacing.gutter,
     paddingBottom: 24,
@@ -207,29 +230,14 @@ const styles = StyleSheet.create({
     padding: Spacing.cardPadding,
     borderWidth: 1,
   },
-  myBubble: {
-    alignSelf: 'flex-end',
-    backgroundColor: '#123846',
-    borderColor: '#1F637A',
-  },
-  otherBubble: {
-    alignSelf: 'flex-start',
-    backgroundColor: Colors.card,
-    borderColor: Colors.line,
-  },
   senderLabel: {
     ...Typography.caption,
-    color: Colors.cyanPrimary,
     fontWeight: '700',
     marginBottom: 4,
   },
-  bubbleText: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-  },
+  bubbleText: { ...Typography.body },
   bubbleTime: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     alignSelf: 'flex-end',
     marginTop: 6,
   },
@@ -240,27 +248,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.gutter,
     paddingVertical: Spacing.grid * 2,
     borderTopWidth: 1,
-    borderTopColor: Colors.line,
-    backgroundColor: Colors.surface,
   },
   input: {
     flex: 1,
     minHeight: 44,
     maxHeight: 110,
-    backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: Colors.line,
     borderRadius: 20,
     paddingHorizontal: Spacing.gutter,
     paddingVertical: 10,
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   sendBtn: {
     width: 46,
     height: 46,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -15,17 +15,18 @@ import {
   View,
 } from 'react-native';
 import { StateView } from '../../components/StateView';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { Spacing, Typography } from '../../constants/theme';
 import { useChats } from '../../src/store/chatStore';
+import { useAppTheme } from '../../src/store/themeStore';
 
 export default function ChatsScreen() {
   const router = useRouter();
   const { threads, createThread } = useChats();
+  const { colors } = useAppTheme();
 
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'All' | 'Direct' | 'Groups'>('All');
 
-  // New discussion modal state
   const [newChatVisible, setNewChatVisible] = useState(false);
   const [newChatName, setNewChatName] = useState('');
   const [newChatIsGroup, setNewChatIsGroup] = useState(false);
@@ -68,30 +69,37 @@ export default function ChatsScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Top Centered Brand Header */}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.base }]}>
       <View style={styles.topBrandBar}>
-        <Text style={styles.brandTitle}>BizSphere</Text>
+        <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>
+          BizSphere
+        </Text>
       </View>
 
-      {/* White Divider Between BizSphere and Chats */}
-      <View style={styles.whiteDivider} />
+      <View
+        style={[styles.whiteDivider, { backgroundColor: colors.divider }]}
+      />
 
-      {/* Chats Section Header */}
       <View style={styles.chatsHeader}>
-        <Text style={styles.chatsTitle}>Chats</Text>
-        <Text style={styles.chatsSubtitle}>
+        <Text style={[styles.chatsTitle, { color: colors.textPrimary }]}>
+          Chats
+        </Text>
+        <Text style={[styles.chatsSubtitle, { color: colors.textSecondary }]}>
           {totalUnread} unread · {threads.length} threads
         </Text>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={18} color={Colors.textSecondary} />
+      <View
+        style={[
+          styles.searchContainer,
+          { backgroundColor: colors.surface, borderColor: colors.line },
+        ]}
+      >
+        <Ionicons name="search" size={18} color={colors.textSecondary} />
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: colors.textPrimary }]}
           placeholder="Search people, groups, messages"
-          placeholderTextColor={Colors.textSecondary}
+          placeholderTextColor={colors.textSecondary}
           value={search}
           onChangeText={setSearch}
         />
@@ -100,24 +108,38 @@ export default function ChatsScreen() {
             <Ionicons
               name="close-circle"
               size={18}
-              color={Colors.textSecondary}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
         )}
       </View>
 
-      {/* Segmented Filter Bar */}
-      <View style={styles.segmentContainer}>
+      <View
+        style={[
+          styles.segmentContainer,
+          { backgroundColor: colors.surface, borderColor: colors.line },
+        ]}
+      >
         {(['All', 'Direct', 'Groups'] as const).map((tab) => {
           const isActive = filter === tab;
           return (
             <TouchableOpacity
               key={tab}
-              style={[styles.segmentTab, isActive && styles.segmentTabActive]}
+              style={[
+                styles.segmentTab,
+                isActive && { backgroundColor: colors.segmentActive },
+              ]}
               onPress={() => setFilter(tab)}
             >
               <Text
-                style={[styles.segmentText, isActive && styles.segmentTextActive]}
+                style={[
+                  styles.segmentText,
+                  {
+                    color: isActive
+                      ? colors.textPrimary
+                      : colors.textSecondary,
+                  },
+                ]}
               >
                 {tab}
               </Text>
@@ -126,7 +148,6 @@ export default function ChatsScreen() {
         })}
       </View>
 
-      {/* Chat Cards List */}
       <FlatList
         data={filteredChats}
         keyExtractor={(item) => item.id}
@@ -146,7 +167,10 @@ export default function ChatsScreen() {
         }
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={styles.chatCard}
+            style={[
+              styles.chatCard,
+              { backgroundColor: colors.card, borderColor: colors.line },
+            ]}
             activeOpacity={0.85}
             onPress={() => handleOpenThread(item.id, item.name)}
           >
@@ -156,18 +180,33 @@ export default function ChatsScreen() {
 
             <View style={styles.cardBody}>
               <View style={styles.cardTopRow}>
-                <Text style={styles.chatName} numberOfLines={1}>
+                <Text
+                  style={[styles.chatName, { color: colors.textPrimary }]}
+                  numberOfLines={1}
+                >
                   {item.name}
                 </Text>
-                <Text style={styles.chatTime}>{item.time}</Text>
+                <Text
+                  style={[styles.chatTime, { color: colors.textSecondary }]}
+                >
+                  {item.time}
+                </Text>
               </View>
 
               <View style={styles.cardBottomRow}>
-                <Text style={styles.chatPreview} numberOfLines={1}>
+                <Text
+                  style={[styles.chatPreview, { color: colors.textSecondary }]}
+                  numberOfLines={1}
+                >
                   {item.preview}
                 </Text>
                 {item.unread > 0 && (
-                  <View style={styles.unreadBadge}>
+                  <View
+                    style={[
+                      styles.unreadBadge,
+                      { backgroundColor: colors.cyanPrimary },
+                    ]}
+                  >
                     <Text style={styles.unreadText}>{item.unread}</Text>
                   </View>
                 )}
@@ -177,9 +216,8 @@ export default function ChatsScreen() {
         )}
       />
 
-      {/* Floating AI Assistant Button Just Above New Chat FAB */}
       <TouchableOpacity
-        style={styles.aiFab}
+        style={[styles.aiFab, { backgroundColor: colors.purpleAi }]}
         activeOpacity={0.85}
         onPress={() =>
           handleOpenThread(
@@ -188,19 +226,17 @@ export default function ChatsScreen() {
           )
         }
       >
-        <Ionicons name="sparkles" size={24} color={Colors.base} />
+        <Ionicons name="sparkles" size={24} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* Floating Cyan Add Button */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: colors.cyanPrimary }]}
         activeOpacity={0.85}
         onPress={() => setNewChatVisible(true)}
       >
-        <Ionicons name="add" size={30} color={Colors.base} />
+        <Ionicons name="add" size={30} color="#080F13" />
       </TouchableOpacity>
 
-      {/* Modal: Create New Discussion */}
       <Modal
         visible={newChatVisible}
         transparent
@@ -208,16 +244,32 @@ export default function ChatsScreen() {
         onRequestClose={() => setNewChatVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nouvelle discussion</Text>
-            <Text style={styles.modalSubtitle}>
+          <View
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.card, borderColor: colors.line },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+              Nouvelle discussion
+            </Text>
+            <Text
+              style={[styles.modalSubtitle, { color: colors.textSecondary }]}
+            >
               Crée un fil direct ou un groupe de travail.
             </Text>
 
             <TextInput
-              style={styles.modalInput}
+              style={[
+                styles.modalInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                  color: colors.textPrimary,
+                },
+              ]}
               placeholder="Nom de la personne ou du groupe..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               value={newChatName}
               onChangeText={setNewChatName}
               autoFocus
@@ -225,26 +277,56 @@ export default function ChatsScreen() {
 
             <View style={styles.typeRow}>
               <TouchableOpacity
-                style={[styles.typeChip, !newChatIsGroup && styles.typeChipActive]}
+                style={[
+                  styles.typeChip,
+                  {
+                    backgroundColor: !newChatIsGroup
+                      ? colors.cyanPrimary
+                      : colors.surface,
+                    borderColor: !newChatIsGroup
+                      ? colors.cyanPrimary
+                      : colors.line,
+                  },
+                ]}
                 onPress={() => setNewChatIsGroup(false)}
               >
                 <Text
                   style={[
                     styles.typeText,
-                    !newChatIsGroup && styles.typeTextActive,
+                    {
+                      color: !newChatIsGroup
+                        ? '#080F13'
+                        : colors.textSecondary,
+                      fontWeight: !newChatIsGroup ? '700' : '500',
+                    },
                   ]}
                 >
                   Direct
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.typeChip, newChatIsGroup && styles.typeChipActive]}
+                style={[
+                  styles.typeChip,
+                  {
+                    backgroundColor: newChatIsGroup
+                      ? colors.cyanPrimary
+                      : colors.surface,
+                    borderColor: newChatIsGroup
+                      ? colors.cyanPrimary
+                      : colors.line,
+                  },
+                ]}
                 onPress={() => setNewChatIsGroup(true)}
               >
                 <Text
                   style={[
                     styles.typeText,
-                    newChatIsGroup && styles.typeTextActive,
+                    {
+                      color: newChatIsGroup
+                        ? '#080F13'
+                        : colors.textSecondary,
+                      fontWeight: newChatIsGroup ? '700' : '500',
+                    },
                   ]}
                 >
                   Group
@@ -254,13 +336,23 @@ export default function ChatsScreen() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity
-                style={styles.cancelBtn}
+                style={[
+                  styles.cancelBtn,
+                  { backgroundColor: colors.surface },
+                ]}
                 onPress={() => setNewChatVisible(false)}
               >
-                <Text style={styles.cancelText}>Annuler</Text>
+                <Text
+                  style={[styles.cancelText, { color: colors.textSecondary }]}
+                >
+                  Annuler
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.createBtn}
+                style={[
+                  styles.createBtn,
+                  { backgroundColor: colors.cyanPrimary },
+                ]}
                 onPress={handleCreateDiscussion}
               >
                 <Text style={styles.createText}>Créer</Text>
@@ -277,10 +369,7 @@ const topCameraOffset =
   Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.base,
-  },
+  container: { flex: 1 },
   topBrandBar: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -290,12 +379,10 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     textAlign: 'center',
   },
   whiteDivider: {
     height: 1,
-    backgroundColor: '#FFFFFF',
     opacity: 0.9,
   },
   chatsHeader: {
@@ -303,22 +390,13 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.grid * 2.5,
     paddingBottom: Spacing.grid * 2,
   },
-  chatsTitle: {
-    ...Typography.title,
-    color: Colors.textPrimary,
-  },
-  chatsSubtitle: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
+  chatsTitle: { ...Typography.title },
+  chatsSubtitle: { ...Typography.label, marginTop: 2 },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
     borderRadius: Spacing.radiusLg,
     borderWidth: 1,
-    borderColor: Colors.line,
     marginHorizontal: Spacing.gutter,
     paddingHorizontal: Spacing.gutter,
     height: 48,
@@ -326,15 +404,12 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...Typography.body,
-    color: Colors.textPrimary,
     marginLeft: Spacing.grid * 2,
   },
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
     borderRadius: Spacing.radiusLg,
     borderWidth: 1,
-    borderColor: Colors.line,
     marginHorizontal: Spacing.gutter,
     marginTop: Spacing.cardGap,
     marginBottom: Spacing.cardGap,
@@ -347,16 +422,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  segmentTabActive: {
-    backgroundColor: '#253349',
-  },
   segmentText: {
     ...Typography.bodyStrong,
-    color: Colors.textSecondary,
     fontSize: 15,
-  },
-  segmentTextActive: {
-    color: Colors.textPrimary,
   },
   listContent: {
     paddingHorizontal: Spacing.gutter,
@@ -366,10 +434,8 @@ const styles = StyleSheet.create({
   chatCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.line,
     padding: Spacing.cardPadding,
   },
   avatar: {
@@ -382,12 +448,10 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     ...Typography.heading,
-    color: Colors.textPrimary,
+    color: '#FFFFFF',
     fontSize: 18,
   },
-  cardBody: {
-    flex: 1,
-  },
+  cardBody: { flex: 1 },
   cardTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -396,16 +460,11 @@ const styles = StyleSheet.create({
   },
   chatName: {
     ...Typography.bodyStrong,
-    color: Colors.textPrimary,
     fontSize: 17,
     flex: 1,
     marginRight: 8,
   },
-  chatTime: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    fontSize: 13,
-  },
+  chatTime: { ...Typography.caption, fontSize: 13 },
   cardBottomRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -413,13 +472,11 @@ const styles = StyleSheet.create({
   },
   chatPreview: {
     ...Typography.label,
-    color: Colors.textSecondary,
     fontSize: 15,
     flex: 1,
     marginRight: 8,
   },
   unreadBadge: {
-    backgroundColor: Colors.cyanPrimary,
     minWidth: 24,
     height: 24,
     borderRadius: Spacing.radiusPill,
@@ -429,7 +486,7 @@ const styles = StyleSheet.create({
   },
   unreadText: {
     ...Typography.caption,
-    color: Colors.base,
+    color: '#080F13',
     fontWeight: '700',
   },
   aiFab: {
@@ -439,7 +496,6 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.purpleAi,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
@@ -451,7 +507,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
     justifyContent: 'center',
     elevation: 6,
@@ -463,57 +518,30 @@ const styles = StyleSheet.create({
     padding: Spacing.gutter,
   },
   modalCard: {
-    backgroundColor: Colors.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.line,
     padding: Spacing.cardPadding,
     gap: 12,
   },
-  modalTitle: {
-    ...Typography.heading,
-    color: Colors.textPrimary,
-  },
-  modalSubtitle: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-  },
+  modalTitle: { ...Typography.heading },
+  modalSubtitle: { ...Typography.label },
   modalInput: {
     height: 46,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
     borderRadius: Spacing.radiusMd,
     paddingHorizontal: Spacing.gutter,
     ...Typography.body,
-    color: Colors.textPrimary,
   },
-  typeRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
+  typeRow: { flexDirection: 'row', gap: 10 },
   typeChip: {
     flex: 1,
     height: 38,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  typeChipActive: {
-    backgroundColor: Colors.cyanPrimary,
-    borderColor: Colors.cyanPrimary,
-  },
-  typeText: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-  },
-  typeTextActive: {
-    color: Colors.base,
-    fontWeight: '700',
-  },
+  typeText: { ...Typography.label },
   modalActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -524,25 +552,20 @@ const styles = StyleSheet.create({
     minHeight: 42,
     paddingHorizontal: 16,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cancelText: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-  },
+  cancelText: { ...Typography.label },
   createBtn: {
     minHeight: 42,
     paddingHorizontal: 20,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   createText: {
     ...Typography.label,
-    color: Colors.base,
+    color: '#080F13',
     fontWeight: '700',
   },
 });

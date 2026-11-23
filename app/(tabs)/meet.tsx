@@ -15,8 +15,9 @@ import {
   View,
 } from 'react-native';
 import { StateView } from '../../components/StateView';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { Spacing, Typography } from '../../constants/theme';
 import { createAgoraMeetController } from '../../src/services/agoraMeetService';
+import { useAppTheme } from '../../src/store/themeStore';
 
 interface ScheduledMeeting {
   id: string;
@@ -35,24 +36,6 @@ interface ParticipantTile {
   color: string;
 }
 
-const INITIAL_MEETINGS: ScheduledMeeting[] = [
-  {
-    id: 'm-1',
-    channelName: 'weekly-design-review',
-    title: 'Weekly design review',
-    meta: '10:00 · 5 people',
-    initials: 'PD',
-    accentColor: Colors.purpleAi,
-  },
-];
-
-const INITIAL_PARTICIPANTS: ParticipantTile[] = [
-  { id: '1', name: 'Amina', initials: 'AM', speaking: false, color: Colors.cyanPrimary },
-  { id: '2', name: 'Luc', initials: 'PD', speaking: false, color: Colors.purpleAi },
-  { id: '3', name: 'Kodjo', initials: 'KO', speaking: true, color: Colors.cyanPrimary },
-  { id: '4', name: 'You', initials: 'You', speaking: false, color: Colors.blueInfo },
-];
-
 function formatDuration(totalSeconds: number): string {
   const mins = Math.floor(totalSeconds / 60);
   const secs = totalSeconds % 60;
@@ -60,27 +43,64 @@ function formatDuration(totalSeconds: number): string {
 }
 
 export default function MeetScreen() {
+  const { colors } = useAppTheme();
   const controllerRef = useRef(createAgoraMeetController());
 
-  const [meetings, setMeetings] = useState<ScheduledMeeting[]>(INITIAL_MEETINGS);
-  const [activeMeeting, setActiveMeeting] = useState<ScheduledMeeting>({
-    id: 'm-1',
-    channelName: 'weekly-design-review',
-    title: 'Weekly design review',
-    meta: '10:00 · 5 people',
-    initials: 'PD',
-    accentColor: Colors.purpleAi,
-  });
+  const defaultMeetings: ScheduledMeeting[] = [
+    {
+      id: 'm-1',
+      channelName: 'weekly-design-review',
+      title: 'Weekly design review',
+      meta: '10:00 · 5 people',
+      initials: 'PD',
+      accentColor: colors.purpleAi,
+    },
+  ];
+
+  const [meetings, setMeetings] = useState<ScheduledMeeting[]>(defaultMeetings);
+  const [activeMeeting, setActiveMeeting] = useState<ScheduledMeeting>(
+    defaultMeetings[0]
+  );
 
   const [inCall, setInCall] = useState(false);
-  const [sessionMode, setSessionMode] = useState<'agora-native' | 'expo-go-sim'>('expo-go-sim');
+  const [sessionMode, setSessionMode] = useState<
+    'agora-native' | 'expo-go-sim'
+  >('expo-go-sim');
   const [micOn, setMicOn] = useState(true);
   const [camOn, setCamOn] = useState(true);
   const [handRaised, setHandRaised] = useState(false);
   const [callSeconds, setCallSeconds] = useState(0);
-  const [participants, setParticipants] = useState<ParticipantTile[]>(INITIAL_PARTICIPANTS);
+  const [participants, setParticipants] = useState<ParticipantTile[]>([
+    {
+      id: '1',
+      name: 'Amina',
+      initials: 'AM',
+      speaking: false,
+      color: colors.cyanPrimary,
+    },
+    {
+      id: '2',
+      name: 'Luc',
+      initials: 'PD',
+      speaking: false,
+      color: colors.purpleAi,
+    },
+    {
+      id: '3',
+      name: 'Kodjo',
+      initials: 'KO',
+      speaking: true,
+      color: colors.cyanPrimary,
+    },
+    {
+      id: '4',
+      name: 'You',
+      initials: 'You',
+      speaking: false,
+      color: colors.blueInfo,
+    },
+  ]);
 
-  // Join with code/link modal
   const [codeModalVisible, setCodeModalVisible] = useState(false);
   const [roomCodeInput, setRoomCodeInput] = useState('');
 
@@ -142,14 +162,18 @@ export default function MeetScreen() {
   const handleJoinByCode = async () => {
     const cleaned = roomCodeInput.trim();
     if (!cleaned) {
-      Alert.alert('Code requis', 'Entre un code ou un nom de salle pour rejoindre.');
+      Alert.alert(
+        'Code requis',
+        'Entre un code ou un nom de salle pour rejoindre.'
+      );
       return;
     }
 
-    const slug = cleaned
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]+/g, '-')
-      .replace(/^-|-$/g, '') || 'bizsphere-room';
+    const slug =
+      cleaned
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]+/g, '-')
+        .replace(/^-|-$/g, '') || 'bizsphere-room';
 
     const customMeeting: ScheduledMeeting = {
       id: `custom-${Date.now()}`,
@@ -157,7 +181,7 @@ export default function MeetScreen() {
       title: cleaned,
       meta: 'Live room · Agora ready',
       initials: cleaned.slice(0, 2).toUpperCase(),
-      accentColor: Colors.cyanPrimary,
+      accentColor: colors.cyanPrimary,
     };
 
     setCodeModalVisible(false);
@@ -169,14 +193,22 @@ export default function MeetScreen() {
 
   if (inCall) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.base }]}>
         <View style={styles.topBrandBar}>
-          <Text style={styles.brandTitle}>BizSphere</Text>
+          <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>
+            BizSphere
+          </Text>
         </View>
-        <View style={styles.whiteDivider} />
+        <View
+          style={[styles.whiteDivider, { backgroundColor: colors.divider }]}
+        />
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>{activeMeeting.title}</Text>
-          <Text style={styles.sectionSubtitle}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            {activeMeeting.title}
+          </Text>
+          <Text
+            style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
+          >
             {formatDuration(callSeconds)} · {participants.length} participants ·{' '}
             {sessionMode === 'agora-native' ? 'Agora RTC' : 'Preview mode'}
           </Text>
@@ -186,14 +218,23 @@ export default function MeetScreen() {
           {participants.map((p) => (
             <View
               key={p.id}
-              style={[styles.tile, p.speaking && styles.tileSpeaking]}
+              style={[
+                styles.tile,
+                {
+                  backgroundColor: colors.card,
+                  borderColor: p.speaking ? colors.cyanPrimary : colors.line,
+                  borderWidth: p.speaking ? 2 : 1,
+                },
+              ]}
             >
-              <View style={[styles.tileAvatar, { backgroundColor: `${p.color}22` }]}>
+              <View
+                style={[styles.tileAvatar, { backgroundColor: `${p.color}22` }]}
+              >
                 <Text style={[styles.tileInitials, { color: p.color }]}>
                   {p.initials}
                 </Text>
               </View>
-              <Text style={styles.tileName}>
+              <Text style={[styles.tileName, { color: colors.textPrimary }]}>
                 {p.name}
                 {p.id === '4' && handRaised ? ' ✋' : ''}
               </Text>
@@ -201,40 +242,62 @@ export default function MeetScreen() {
           ))}
         </View>
 
-        <View style={styles.statusPill}>
-          <View style={styles.greenDot} />
-          <Text style={styles.statusText}>
+        <View
+          style={[
+            styles.statusPill,
+            { backgroundColor: colors.surface, borderColor: colors.line },
+          ]}
+        >
+          <View
+            style={[styles.greenDot, { backgroundColor: colors.success }]}
+          />
+          <Text style={[styles.statusText, { color: colors.textPrimary }]}>
             Speaking: {activeSpeaker} · captions on
           </Text>
         </View>
 
         <View style={styles.callControls}>
           <TouchableOpacity
-            style={[styles.controlCircle, !micOn && styles.controlCircleMuted]}
+            style={[
+              styles.controlCircle,
+              {
+                backgroundColor: colors.card,
+                borderColor: !micOn ? colors.danger : colors.line,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={handleToggleMic}
           >
             <Ionicons
               name={micOn ? 'mic' : 'mic-off'}
               size={22}
-              color={Colors.textPrimary}
+              color={colors.textPrimary}
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.controlCircle, !camOn && styles.controlCircleMuted]}
+            style={[
+              styles.controlCircle,
+              {
+                backgroundColor: colors.card,
+                borderColor: !camOn ? colors.danger : colors.line,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={handleToggleCam}
           >
             <Ionicons
               name={camOn ? 'videocam' : 'videocam-off'}
               size={22}
-              color={Colors.textPrimary}
+              color={colors.textPrimary}
             />
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.controlCircle,
-              handRaised && styles.controlCircleActive,
+              {
+                backgroundColor: handRaised ? colors.cyanPrimary : colors.card,
+                borderColor: handRaised ? colors.cyanPrimary : colors.line,
+              },
             ]}
             activeOpacity={0.85}
             onPress={() => setHandRaised(!handRaised)}
@@ -242,11 +305,11 @@ export default function MeetScreen() {
             <Ionicons
               name={handRaised ? 'hand-left' : 'hand-left-outline'}
               size={22}
-              color={handRaised ? Colors.base : Colors.textPrimary}
+              color={handRaised ? '#080F13' : colors.textPrimary}
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.leaveBtn}
+            style={[styles.leaveBtn, { backgroundColor: colors.danger }]}
             activeOpacity={0.85}
             onPress={handleLeaveMeeting}
           >
@@ -258,29 +321,50 @@ export default function MeetScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Top Centered Brand Header */}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.base }]}>
       <View style={styles.topBrandBar}>
-        <Text style={styles.brandTitle}>BizSphere</Text>
+        <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>
+          BizSphere
+        </Text>
       </View>
 
-      {/* White Divider */}
-      <View style={styles.whiteDivider} />
+      <View
+        style={[styles.whiteDivider, { backgroundColor: colors.divider }]}
+      />
 
-      {/* Section Header */}
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Meet</Text>
-        <Text style={styles.sectionSubtitle}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+          Meet
+        </Text>
+        <Text
+          style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
+        >
           Ready to join · Agora channel bridge
         </Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.lobbyScroll}>
-        <View style={styles.previewCard}>
-          <View style={styles.previewAvatar}>
-            <Text style={styles.previewInitials}>You</Text>
+        <View
+          style={[
+            styles.previewCard,
+            { backgroundColor: colors.surface, borderColor: colors.line },
+          ]}
+        >
+          <View
+            style={[
+              styles.previewAvatar,
+              { backgroundColor: `${colors.cyanPrimary}22` },
+            ]}
+          >
+            <Text
+              style={[styles.previewInitials, { color: colors.cyanPrimary }]}
+            >
+              You
+            </Text>
           </View>
-          <Text style={styles.previewLabel}>
+          <Text
+            style={[styles.previewLabel, { color: colors.textSecondary }]}
+          >
             {camOn ? 'Camera preview ready' : 'Camera is off'} ·{' '}
             {micOn ? 'Mic on' : 'Mic muted'}
           </Text>
@@ -288,31 +372,43 @@ export default function MeetScreen() {
 
         <View style={styles.lobbyToggles}>
           <TouchableOpacity
-            style={[styles.toggleBtn, micOn && styles.toggleBtnActive]}
+            style={[
+              styles.toggleBtn,
+              {
+                backgroundColor: micOn ? colors.cyanPrimary : colors.card,
+                borderColor: micOn ? colors.cyanPrimary : colors.line,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={handleToggleMic}
           >
             <Ionicons
               name={micOn ? 'mic' : 'mic-off'}
               size={22}
-              color={micOn ? Colors.base : Colors.textPrimary}
+              color={micOn ? '#080F13' : colors.textPrimary}
             />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.toggleBtn, camOn && styles.toggleBtnActive]}
+            style={[
+              styles.toggleBtn,
+              {
+                backgroundColor: camOn ? colors.cyanPrimary : colors.card,
+                borderColor: camOn ? colors.cyanPrimary : colors.line,
+              },
+            ]}
             activeOpacity={0.85}
             onPress={handleToggleCam}
           >
             <Ionicons
               name={camOn ? 'videocam' : 'videocam-off'}
               size={22}
-              color={camOn ? Colors.base : Colors.textPrimary}
+              color={camOn ? '#080F13' : colors.textPrimary}
             />
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
-          style={styles.joinBtn}
+          style={[styles.joinBtn, { backgroundColor: colors.cyanPrimary }]}
           activeOpacity={0.85}
           onPress={() => handleJoinMeeting(activeMeeting)}
         >
@@ -320,16 +416,29 @@ export default function MeetScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.linkBtn}
+          style={[
+            styles.linkBtn,
+            { backgroundColor: colors.surface, borderColor: colors.line },
+          ]}
           activeOpacity={0.85}
           onPress={() => setCodeModalVisible(true)}
         >
-          <Ionicons name="link-outline" size={18} color={Colors.textSecondary} />
-          <Text style={styles.linkBtnText}>Join with a link or code</Text>
+          <Ionicons
+            name="link-outline"
+            size={18}
+            color={colors.textSecondary}
+          />
+          <Text style={[styles.linkBtnText, { color: colors.textSecondary }]}>
+            Join with a link or code
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.upcomingSection}>
-          <Text style={styles.sectionLabel}>STARTING SOON</Text>
+          <Text
+            style={[styles.sectionLabel, { color: colors.textSecondary }]}
+          >
+            STARTING SOON
+          </Text>
 
           {meetings.length === 0 ? (
             <StateView
@@ -338,13 +447,16 @@ export default function MeetScreen() {
               title="Aucune réunion planifiée"
               description="Rejoins une salle par code ou recharge les sessions."
               actionLabel="Recharger"
-              onAction={() => setMeetings(INITIAL_MEETINGS)}
+              onAction={() => setMeetings(defaultMeetings)}
             />
           ) : (
             meetings.map((item) => (
               <TouchableOpacity
                 key={item.id}
-                style={styles.upcomingCard}
+                style={[
+                  styles.upcomingCard,
+                  { backgroundColor: colors.card, borderColor: colors.line },
+                ]}
                 activeOpacity={0.85}
                 onPress={() => handleJoinMeeting(item)}
               >
@@ -364,13 +476,27 @@ export default function MeetScreen() {
                   </Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.upcomingTitle}>{item.title}</Text>
-                  <Text style={styles.upcomingMeta}>{item.meta}</Text>
+                  <Text
+                    style={[
+                      styles.upcomingTitle,
+                      { color: colors.textPrimary },
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.upcomingMeta,
+                      { color: colors.textSecondary },
+                    ]}
+                  >
+                    {item.meta}
+                  </Text>
                 </View>
                 <Ionicons
                   name="chevron-forward"
                   size={20}
-                  color={Colors.textSecondary}
+                  color={colors.textSecondary}
                 />
               </TouchableOpacity>
             ))
@@ -378,7 +504,6 @@ export default function MeetScreen() {
         </View>
       </ScrollView>
 
-      {/* Modal: Join with Link or Code */}
       <Modal
         visible={codeModalVisible}
         transparent
@@ -386,28 +511,56 @@ export default function MeetScreen() {
         onRequestClose={() => setCodeModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Join with a code</Text>
-            <Text style={styles.modalDesc}>
-              Saisis un nom de canal ou un code de réunion pour entrer dans la salle.
+          <View
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.card, borderColor: colors.line },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+              Join with a code
+            </Text>
+            <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
+              Saisis un nom de canal ou un code de réunion pour entrer dans la
+              salle.
             </Text>
             <TextInput
-              style={styles.modalInput}
+              style={[
+                styles.modalInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                  color: colors.textPrimary,
+                },
+              ]}
               placeholder="Ex: archtek-sync-01"
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               value={roomCodeInput}
               onChangeText={setRoomCodeInput}
               autoFocus
             />
             <View style={styles.modalRow}>
               <TouchableOpacity
-                style={styles.modalCancel}
+                style={[
+                  styles.modalCancel,
+                  { backgroundColor: colors.surface },
+                ]}
                 onPress={() => setCodeModalVisible(false)}
               >
-                <Text style={styles.modalCancelText}>Annuler</Text>
+                <Text
+                  style={[
+                    styles.modalCancelText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Annuler
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalConfirm}
+                style={[
+                  styles.modalConfirm,
+                  { backgroundColor: colors.cyanPrimary },
+                ]}
                 onPress={handleJoinByCode}
               >
                 <Text style={styles.modalConfirmText}>Rejoindre</Text>
@@ -424,7 +577,7 @@ const topCameraOffset =
   Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.base },
+  container: { flex: 1 },
   topBrandBar: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -434,33 +587,22 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     textAlign: 'center',
   },
-  whiteDivider: {
-    height: 1,
-    backgroundColor: '#FFFFFF',
-    opacity: 0.9,
-  },
+  whiteDivider: { height: 1, opacity: 0.9 },
   sectionHeader: {
     paddingHorizontal: Spacing.gutter,
     paddingTop: Spacing.grid * 2.5,
     paddingBottom: Spacing.grid * 2,
   },
-  sectionTitle: { ...Typography.title, color: Colors.textPrimary },
-  sectionSubtitle: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
+  sectionTitle: { ...Typography.title },
+  sectionSubtitle: { ...Typography.label, marginTop: 2 },
   lobbyScroll: { paddingBottom: Spacing.gutter * 2 },
   previewCard: {
     height: 190,
     marginHorizontal: Spacing.gutter,
-    backgroundColor: Colors.surface,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -468,13 +610,12 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: `${Colors.cyanPrimary}22`,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Spacing.grid * 3,
   },
-  previewInitials: { ...Typography.heading, color: Colors.cyanPrimary },
-  previewLabel: { ...Typography.caption, color: Colors.textSecondary },
+  previewInitials: { ...Typography.heading },
+  previewLabel: { ...Typography.caption },
   lobbyToggles: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -485,26 +626,19 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: Colors.line,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  toggleBtnActive: {
-    backgroundColor: Colors.cyanPrimary,
-    borderColor: Colors.cyanPrimary,
   },
   joinBtn: {
     marginHorizontal: Spacing.gutter,
     marginTop: Spacing.gutter,
     minHeight: 48,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  joinBtnText: { ...Typography.bodyStrong, color: Colors.base },
+  joinBtnText: { ...Typography.bodyStrong, color: '#080F13' },
   linkBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -514,25 +648,17 @@ const styles = StyleSheet.create({
     marginTop: Spacing.cardGap,
     minHeight: Spacing.minTapTarget,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
   },
-  linkBtnText: { ...Typography.label, color: Colors.textSecondary },
+  linkBtnText: { ...Typography.label },
   upcomingSection: { padding: Spacing.gutter, marginTop: Spacing.grid * 2 },
-  sectionLabel: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.grid * 2,
-  },
+  sectionLabel: { ...Typography.caption, marginBottom: Spacing.grid * 2 },
   upcomingCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.grid * 3,
-    backgroundColor: Colors.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.line,
     padding: Spacing.cardPadding,
   },
   upcomingAvatar: {
@@ -543,8 +669,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   upcomingInitials: { ...Typography.bodyStrong },
-  upcomingTitle: { ...Typography.bodyStrong, color: Colors.textPrimary },
-  upcomingMeta: { ...Typography.label, color: Colors.textSecondary },
+  upcomingTitle: { ...Typography.bodyStrong },
+  upcomingMeta: { ...Typography.label },
   grid: {
     flex: 1,
     flexDirection: 'row',
@@ -555,14 +681,10 @@ const styles = StyleSheet.create({
   tile: {
     width: '48%',
     height: '47%',
-    backgroundColor: Colors.card,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  tileSpeaking: { borderWidth: 2, borderColor: Colors.cyanPrimary },
   tileAvatar: {
     width: 56,
     height: 56,
@@ -572,27 +694,20 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.grid * 2,
   },
   tileInitials: { ...Typography.heading },
-  tileName: { ...Typography.label, color: Colors.textPrimary },
+  tileName: { ...Typography.label },
   statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'center',
     gap: 8,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
     borderRadius: Spacing.radiusPill,
     paddingHorizontal: 14,
     paddingVertical: 6,
     marginBottom: Spacing.cardGap,
   },
-  greenDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: Colors.success,
-  },
-  statusText: { ...Typography.caption, color: Colors.textPrimary },
+  greenDot: { width: 8, height: 8, borderRadius: 4 },
+  statusText: { ...Typography.caption },
   callControls: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -604,28 +719,18 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.card,
     borderWidth: 1,
-    borderColor: Colors.line,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  controlCircleMuted: {
-    borderColor: Colors.danger,
-  },
-  controlCircleActive: {
-    backgroundColor: Colors.cyanPrimary,
-    borderColor: Colors.cyanPrimary,
   },
   leaveBtn: {
     minHeight: 48,
     paddingHorizontal: 20,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.danger,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  leaveText: { ...Typography.bodyStrong, color: Colors.base },
+  leaveText: { ...Typography.bodyStrong, color: '#FFFFFF' },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.72)',
@@ -633,24 +738,19 @@ const styles = StyleSheet.create({
     padding: Spacing.gutter,
   },
   modalCard: {
-    backgroundColor: Colors.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.line,
     padding: Spacing.cardPadding,
     gap: 12,
   },
-  modalTitle: { ...Typography.heading, color: Colors.textPrimary },
-  modalDesc: { ...Typography.label, color: Colors.textSecondary },
+  modalTitle: { ...Typography.heading },
+  modalDesc: { ...Typography.label },
   modalInput: {
     height: 46,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
     borderRadius: Spacing.radiusMd,
     paddingHorizontal: Spacing.gutter,
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   modalRow: {
     flexDirection: 'row',
@@ -662,22 +762,20 @@ const styles = StyleSheet.create({
     minHeight: 42,
     paddingHorizontal: 16,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalCancelText: { ...Typography.label, color: Colors.textSecondary },
+  modalCancelText: { ...Typography.label },
   modalConfirm: {
     minHeight: 42,
     paddingHorizontal: 20,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalConfirmText: {
     ...Typography.label,
-    color: Colors.base,
+    color: '#080F13',
     fontWeight: '700',
   },
 });

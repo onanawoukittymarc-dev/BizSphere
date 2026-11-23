@@ -14,7 +14,8 @@ import {
   View,
 } from 'react-native';
 import { StateView } from '../../components/StateView';
-import { Colors, Spacing, Typography } from '../../constants/theme';
+import { Spacing, Typography } from '../../constants/theme';
+import { useAppTheme } from '../../src/store/themeStore';
 
 interface StorySegment {
   id: string;
@@ -32,103 +33,105 @@ interface StoryAccount {
   segments: StorySegment[];
 }
 
-const INITIAL_STORY_ACCOUNTS: StoryAccount[] = [
-  {
-    id: '1',
-    name: 'Your story',
-    initials: 'You',
-    roleOrTime: 'Tap to add',
-    accentColor: Colors.cyanPrimary,
-    isOwn: true,
-    segments: [
-      {
-        id: 's-1-a',
-        caption: 'Share a quick update with your team for the next 24 hours.',
-        timeLabel: 'Just now',
-      },
-    ],
-  },
-  {
-    id: '2',
-    name: 'Design',
-    initials: 'PD',
-    roleOrTime: '2h ago',
-    accentColor: Colors.purpleAi,
-    segments: [
-      {
-        id: 's-2-a',
-        caption:
-          'New tokens are live — every accent now passes AA on the card surface.',
-        timeLabel: '2h ago',
-      },
-      {
-        id: 's-2-b',
-        caption:
-          'Calm Command Center spacing is unified across Chats, Stories, and Meet.',
-        timeLabel: '1h ago',
-      },
-      {
-        id: 's-2-c',
-        caption: 'Ready for mobile review before tonight’s sprint check-in.',
-        timeLabel: '45m ago',
-      },
-    ],
-  },
-  {
-    id: '3',
-    name: 'Kodjo',
-    initials: 'KO',
-    roleOrTime: '3h ago',
-    accentColor: Colors.success,
-    segments: [
-      {
-        id: 's-3-a',
-        caption:
-          'Voice notes now include instant transcript previews right in the thread.',
-        timeLabel: '3h ago',
-      },
-    ],
-  },
-  {
-    id: '4',
-    name: 'Finance',
-    initials: 'FN',
-    roleOrTime: '5h ago',
-    accentColor: Colors.warning,
-    segments: [
-      {
-        id: 's-4-a',
-        caption: 'Q4 budget checkpoint completed — ready for sign-off.',
-        timeLabel: '5h ago',
-      },
-    ],
-  },
-  {
-    id: '5',
-    name: 'Amina',
-    initials: 'AM',
-    roleOrTime: '6h ago',
-    accentColor: Colors.blueInfo,
-    segments: [
-      {
-        id: 's-5-a',
-        caption: 'Updated deck slides uploaded to the shared workspace.',
-        timeLabel: '6h ago',
-      },
-    ],
-  },
-];
-
 export default function StoriesScreen() {
-  const [accounts, setAccounts] = useState<StoryAccount[]>(
-    INITIAL_STORY_ACCOUNTS
+  const { colors } = useAppTheme();
+
+  const initialAccounts: StoryAccount[] = useMemo(
+    () => [
+      {
+        id: '1',
+        name: 'Your story',
+        initials: 'You',
+        roleOrTime: 'Tap to add',
+        accentColor: colors.cyanPrimary,
+        isOwn: true,
+        segments: [
+          {
+            id: 's-1-a',
+            caption: 'Share a quick update with your team for the next 24 hours.',
+            timeLabel: 'Just now',
+          },
+        ],
+      },
+      {
+        id: '2',
+        name: 'Design',
+        initials: 'PD',
+        roleOrTime: '2h ago',
+        accentColor: colors.purpleAi,
+        segments: [
+          {
+            id: 's-2-a',
+            caption:
+              'New tokens are live — every accent now passes AA on the card surface.',
+            timeLabel: '2h ago',
+          },
+          {
+            id: 's-2-b',
+            caption:
+              'Calm Command Center spacing is unified across Chats, Stories, and Meet.',
+            timeLabel: '1h ago',
+          },
+          {
+            id: 's-2-c',
+            caption: 'Ready for mobile review before tonight’s sprint check-in.',
+            timeLabel: '45m ago',
+          },
+        ],
+      },
+      {
+        id: '3',
+        name: 'Kodjo',
+        initials: 'KO',
+        roleOrTime: '3h ago',
+        accentColor: colors.success,
+        segments: [
+          {
+            id: 's-3-a',
+            caption:
+              'Voice notes now include instant transcript previews right in the thread.',
+            timeLabel: '3h ago',
+          },
+        ],
+      },
+      {
+        id: '4',
+        name: 'Finance',
+        initials: 'FN',
+        roleOrTime: '5h ago',
+        accentColor: colors.warning,
+        segments: [
+          {
+            id: 's-4-a',
+            caption: 'Q4 budget checkpoint completed — ready for sign-off.',
+            timeLabel: '5h ago',
+          },
+        ],
+      },
+      {
+        id: '5',
+        name: 'Amina',
+        initials: 'AM',
+        roleOrTime: '6h ago',
+        accentColor: colors.blueInfo,
+        segments: [
+          {
+            id: 's-5-a',
+            caption: 'Updated deck slides uploaded to the shared workspace.',
+            timeLabel: '6h ago',
+          },
+        ],
+      },
+    ],
+    [colors]
   );
+
+  const [accounts, setAccounts] = useState<StoryAccount[]>(initialAccounts);
   const [selectedId, setSelectedId] = useState<string>('2');
   const [segmentIndex, setSegmentIndex] = useState<number>(0);
   const [reply, setReply] = useState('');
   const [sentFeedback, setSentFeedback] = useState<string | null>(null);
 
-  // Create story modal state
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [newCaption, setNewCaption] = useState('');
 
@@ -144,11 +147,6 @@ export default function StoriesScreen() {
 
   const handleSelectAccount = (account: StoryAccount) => {
     setSentFeedback(null);
-    if (account.isOwn && account.segments.length === 1 && account.segments[0].id === 's-1-a') {
-      setSelectedId(account.id);
-      setSegmentIndex(0);
-      return;
-    }
     setSelectedId(account.id);
     setSegmentIndex(0);
   };
@@ -214,33 +212,42 @@ export default function StoriesScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Top Centered Brand Header */}
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.base }]}>
       <View style={styles.topBrandBar}>
-        <Text style={styles.brandTitle}>BizSphere</Text>
+        <Text style={[styles.brandTitle, { color: colors.textPrimary }]}>
+          BizSphere
+        </Text>
       </View>
 
-      {/* White Divider Between BizSphere and Stories */}
-      <View style={styles.whiteDivider} />
+      <View
+        style={[styles.whiteDivider, { backgroundColor: colors.divider }]}
+      />
 
-      {/* Section Header */}
       <View style={styles.sectionHeaderRow}>
         <View>
-          <Text style={styles.sectionTitle}>Stories</Text>
-          <Text style={styles.sectionSubtitle}>Your team, last 24 hours</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
+            Stories
+          </Text>
+          <Text
+            style={[styles.sectionSubtitle, { color: colors.textSecondary }]}
+          >
+            Your team, last 24 hours
+          </Text>
         </View>
 
         <TouchableOpacity
-          style={styles.addStoryBtn}
+          style={[
+            styles.addStoryBtn,
+            { backgroundColor: colors.cyanPrimary },
+          ]}
           activeOpacity={0.85}
           onPress={() => setCreateModalVisible(true)}
         >
-          <Ionicons name="add" size={18} color={Colors.base} />
+          <Ionicons name="add" size={18} color="#080F13" />
           <Text style={styles.addStoryText}>New story</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Accounts Ring Rail — Name Centered Directly Under Each Icon */}
       <View style={styles.railWrapper}>
         <ScrollView
           horizontal
@@ -259,7 +266,11 @@ export default function StoriesScreen() {
                 <View
                   style={[
                     styles.ringOuter,
-                    isSelected && { borderColor: account.accentColor },
+                    {
+                      borderColor: isSelected
+                        ? account.accentColor
+                        : colors.line,
+                    },
                   ]}
                 >
                   <View
@@ -290,7 +301,12 @@ export default function StoriesScreen() {
                 <Text
                   style={[
                     styles.accountName,
-                    isSelected && styles.accountNameActive,
+                    {
+                      color: isSelected
+                        ? colors.textPrimary
+                        : colors.textSecondary,
+                      fontWeight: isSelected ? '700' : '500',
+                    },
                   ]}
                   numberOfLines={1}
                 >
@@ -302,7 +318,6 @@ export default function StoriesScreen() {
         </ScrollView>
       </View>
 
-      {/* Story Viewer Card or Empty State */}
       {!activeAccount || !activeSegment ? (
         <View style={styles.emptyWrap}>
           <StateView
@@ -312,15 +327,19 @@ export default function StoriesScreen() {
             description="Publie une story ou recharge les mises à jour de l'équipe."
             actionLabel="Recharger"
             onAction={() => {
-              setAccounts(INITIAL_STORY_ACCOUNTS);
+              setAccounts(initialAccounts);
               setSelectedId('2');
               setSegmentIndex(0);
             }}
           />
         </View>
       ) : (
-        <View style={styles.viewerCard}>
-          {/* Progress Segments */}
+        <View
+          style={[
+            styles.viewerCard,
+            { backgroundColor: colors.card, borderColor: colors.line },
+          ]}
+        >
           <View style={styles.progressRow}>
             {activeAccount.segments.map((seg, idx) => {
               const filled = idx <= segmentIndex;
@@ -336,7 +355,11 @@ export default function StoriesScreen() {
                   <View
                     style={[
                       styles.progressSegment,
-                      filled && { backgroundColor: activeAccount.accentColor },
+                      {
+                        backgroundColor: filled
+                          ? activeAccount.accentColor
+                          : colors.line,
+                      },
                     ]}
                   />
                 </TouchableOpacity>
@@ -344,7 +367,6 @@ export default function StoriesScreen() {
             })}
           </View>
 
-          {/* Author Header */}
           <View style={styles.viewerHeader}>
             <View
               style={[
@@ -362,86 +384,135 @@ export default function StoriesScreen() {
               </Text>
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.viewerAuthor}>{activeAccount.name}</Text>
-              <Text style={styles.viewerTime}>{activeSegment.timeLabel}</Text>
+              <Text
+                style={[styles.viewerAuthor, { color: colors.textPrimary }]}
+              >
+                {activeAccount.name}
+              </Text>
+              <Text
+                style={[styles.viewerTime, { color: colors.textSecondary }]}
+              >
+                {activeSegment.timeLabel}
+              </Text>
             </View>
 
             <View style={styles.navArrows}>
               <TouchableOpacity
-                style={styles.arrowBtn}
+                style={[
+                  styles.arrowBtn,
+                  { backgroundColor: colors.surface, borderColor: colors.line },
+                ]}
                 onPress={handlePrevSegment}
               >
                 <Ionicons
                   name="chevron-back"
                   size={18}
-                  color={Colors.textPrimary}
+                  color={colors.textPrimary}
                 />
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.arrowBtn}
+                style={[
+                  styles.arrowBtn,
+                  { backgroundColor: colors.surface, borderColor: colors.line },
+                ]}
                 onPress={handleNextSegment}
               >
                 <Ionicons
                   name="chevron-forward"
                   size={18}
-                  color={Colors.textPrimary}
+                  color={colors.textPrimary}
                 />
               </TouchableOpacity>
             </View>
           </View>
 
-          {/* Tap Stage to Advance */}
           <TouchableOpacity
             style={styles.viewerCenter}
             activeOpacity={0.95}
             onPress={handleNextSegment}
           >
-            <View style={styles.captionBox}>
+            <View
+              style={[
+                styles.captionBox,
+                { backgroundColor: colors.surface, borderColor: colors.line },
+              ]}
+            >
               <View style={styles.captionBadge}>
                 <Ionicons
                   name="closed-captioning"
                   size={14}
-                  color={Colors.cyanPrimary}
+                  color={colors.cyanPrimary}
                 />
-                <Text style={styles.captionBadgeText}>CAPTIONS ON</Text>
+                <Text
+                  style={[
+                    styles.captionBadgeText,
+                    { color: colors.cyanPrimary },
+                  ]}
+                >
+                  CAPTIONS ON
+                </Text>
               </View>
-              <Text style={styles.captionCopy}>{activeSegment.caption}</Text>
+              <Text
+                style={[styles.captionCopy, { color: colors.textPrimary }]}
+              >
+                {activeSegment.caption}
+              </Text>
             </View>
 
             {sentFeedback && (
-              <View style={styles.feedbackBanner}>
+              <View
+                style={[
+                  styles.feedbackBanner,
+                  {
+                    backgroundColor: `${colors.success}18`,
+                    borderColor: `${colors.success}55`,
+                  },
+                ]}
+              >
                 <Ionicons
                   name="checkmark-circle"
                   size={16}
-                  color={Colors.success}
+                  color={colors.success}
                 />
-                <Text style={styles.feedbackText}>{sentFeedback}</Text>
+                <Text
+                  style={[styles.feedbackText, { color: colors.textPrimary }]}
+                >
+                  {sentFeedback}
+                </Text>
               </View>
             )}
           </TouchableOpacity>
 
-          {/* Quick Reply Row */}
           <View style={styles.replyRow}>
             <TextInput
-              style={styles.replyInput}
+              style={[
+                styles.replyInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                  color: colors.textPrimary,
+                },
+              ]}
               placeholder={`Reply to ${activeAccount.name}...`}
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               value={reply}
               onChangeText={setReply}
               onSubmitEditing={handleSendReply}
             />
             <TouchableOpacity
-              style={styles.sendBtn}
+              style={[
+                styles.sendBtn,
+                { backgroundColor: colors.cyanPrimary },
+              ]}
               activeOpacity={0.85}
               onPress={handleSendReply}
             >
-              <Ionicons name="send" size={18} color={Colors.base} />
+              <Ionicons name="send" size={18} color="#080F13" />
             </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* Modal: Publish New Story */}
       <Modal
         visible={createModalVisible}
         transparent
@@ -449,15 +520,29 @@ export default function StoriesScreen() {
         onRequestClose={() => setCreateModalVisible(false)}
       >
         <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Nouvelle story (24h)</Text>
-            <Text style={styles.modalDesc}>
+          <View
+            style={[
+              styles.modalCard,
+              { backgroundColor: colors.card, borderColor: colors.line },
+            ]}
+          >
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>
+              Nouvelle story (24h)
+            </Text>
+            <Text style={[styles.modalDesc, { color: colors.textSecondary }]}>
               Partage une mise à jour rapide avec ton équipe.
             </Text>
             <TextInput
-              style={styles.modalInput}
+              style={[
+                styles.modalInput,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.line,
+                  color: colors.textPrimary,
+                },
+              ]}
               placeholder="Ex: Sprint review prêt pour 15h..."
-              placeholderTextColor={Colors.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               value={newCaption}
               onChangeText={setNewCaption}
               multiline
@@ -465,13 +550,26 @@ export default function StoriesScreen() {
             />
             <View style={styles.modalRow}>
               <TouchableOpacity
-                style={styles.modalCancel}
+                style={[
+                  styles.modalCancel,
+                  { backgroundColor: colors.surface },
+                ]}
                 onPress={() => setCreateModalVisible(false)}
               >
-                <Text style={styles.modalCancelText}>Annuler</Text>
+                <Text
+                  style={[
+                    styles.modalCancelText,
+                    { color: colors.textSecondary },
+                  ]}
+                >
+                  Annuler
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.modalPublish}
+                style={[
+                  styles.modalPublish,
+                  { backgroundColor: colors.cyanPrimary },
+                ]}
                 onPress={handlePublishStory}
               >
                 <Text style={styles.modalPublishText}>Publier</Text>
@@ -488,10 +586,7 @@ const topCameraOffset =
   Platform.OS === 'android' ? (StatusBar.currentHeight ?? 24) + 14 : 18;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.base,
-  },
+  container: { flex: 1 },
   topBrandBar: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -501,14 +596,9 @@ const styles = StyleSheet.create({
   },
   brandTitle: {
     ...Typography.heading,
-    color: Colors.textPrimary,
     textAlign: 'center',
   },
-  whiteDivider: {
-    height: 1,
-    backgroundColor: '#FFFFFF',
-    opacity: 0.9,
-  },
+  whiteDivider: { height: 1, opacity: 0.9 },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -517,46 +607,29 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.grid * 2.5,
     paddingBottom: Spacing.grid,
   },
-  sectionTitle: {
-    ...Typography.title,
-    color: Colors.textPrimary,
-  },
-  sectionSubtitle: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
+  sectionTitle: { ...Typography.title },
+  sectionSubtitle: { ...Typography.label, marginTop: 2 },
   addStoryBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.cyanPrimary,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: Spacing.radiusPill,
   },
   addStoryText: {
     ...Typography.caption,
-    color: Colors.base,
+    color: '#080F13',
     fontWeight: '700',
   },
-  railWrapper: {
-    paddingVertical: Spacing.grid * 1.5,
-  },
-  ringRail: {
-    paddingHorizontal: Spacing.gutter,
-    gap: Spacing.cardGap,
-  },
-  accountColumn: {
-    width: 72,
-    alignItems: 'center',
-  },
+  railWrapper: { paddingVertical: Spacing.grid * 1.5 },
+  ringRail: { paddingHorizontal: Spacing.gutter, gap: Spacing.cardGap },
+  accountColumn: { width: 72, alignItems: 'center' },
   ringOuter: {
     width: 60,
     height: 60,
     borderRadius: Spacing.radiusPill,
     borderWidth: 2,
-    borderColor: Colors.line,
     padding: 3,
     alignItems: 'center',
     justifyContent: 'center',
@@ -569,19 +642,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  avatarText: {
-    ...Typography.bodyStrong,
-    fontSize: 16,
-  },
+  avatarText: { ...Typography.bodyStrong, fontSize: 16 },
   accountName: {
     ...Typography.caption,
-    color: Colors.textSecondary,
     textAlign: 'center',
     width: '100%',
-  },
-  accountNameActive: {
-    color: Colors.textPrimary,
-    fontWeight: '700',
   },
   emptyWrap: {
     flex: 1,
@@ -593,26 +658,14 @@ const styles = StyleSheet.create({
     marginHorizontal: Spacing.gutter,
     marginTop: Spacing.grid,
     marginBottom: Spacing.gutter,
-    backgroundColor: Colors.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.line,
     padding: Spacing.cardPadding,
     justifyContent: 'space-between',
   },
-  progressRow: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  progressTouch: {
-    flex: 1,
-    paddingVertical: 4,
-  },
-  progressSegment: {
-    height: 3,
-    borderRadius: 2,
-    backgroundColor: Colors.line,
-  },
+  progressRow: { flexDirection: 'row', gap: 6 },
+  progressTouch: { flex: 1, paddingVertical: 4 },
+  progressSegment: { height: 3, borderRadius: 2 },
   viewerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -626,29 +679,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  viewerAvatarText: {
-    ...Typography.label,
-    fontWeight: '700',
-  },
-  viewerAuthor: {
-    ...Typography.bodyStrong,
-    color: Colors.textPrimary,
-  },
-  viewerTime: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-  },
-  navArrows: {
-    flexDirection: 'row',
-    gap: 6,
-  },
+  viewerAvatarText: { ...Typography.label, fontWeight: '700' },
+  viewerAuthor: { ...Typography.bodyStrong },
+  viewerTime: { ...Typography.caption },
+  navArrows: { flexDirection: 'row', gap: 6 },
   arrowBtn: {
     width: 34,
     height: 34,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -659,10 +698,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   captionBox: {
-    backgroundColor: Colors.surface,
     borderRadius: Spacing.radiusMd,
     borderWidth: 1,
-    borderColor: Colors.line,
     padding: Spacing.cardPadding,
   },
   captionBadge: {
@@ -671,51 +708,31 @@ const styles = StyleSheet.create({
     gap: 6,
     marginBottom: 6,
   },
-  captionBadgeText: {
-    ...Typography.caption,
-    color: Colors.cyanPrimary,
-    fontWeight: '700',
-  },
-  captionCopy: {
-    ...Typography.body,
-    color: Colors.textPrimary,
-  },
+  captionBadgeText: { ...Typography.caption, fontWeight: '700' },
+  captionCopy: { ...Typography.body },
   feedbackBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: `${Colors.success}18`,
     borderWidth: 1,
-    borderColor: `${Colors.success}55`,
     borderRadius: Spacing.radiusMd,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  feedbackText: {
-    ...Typography.caption,
-    color: Colors.textPrimary,
-    flex: 1,
-  },
-  replyRow: {
-    flexDirection: 'row',
-    gap: Spacing.grid * 2,
-  },
+  feedbackText: { ...Typography.caption, flex: 1 },
+  replyRow: { flexDirection: 'row', gap: Spacing.grid * 2 },
   replyInput: {
     flex: 1,
     minHeight: Spacing.minTapTarget,
-    backgroundColor: Colors.surface,
     borderRadius: Spacing.radiusPill,
     borderWidth: 1,
-    borderColor: Colors.line,
     paddingHorizontal: Spacing.gutter,
     ...Typography.body,
-    color: Colors.textPrimary,
   },
   sendBtn: {
     width: Spacing.minTapTarget,
     height: Spacing.minTapTarget,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -726,31 +743,20 @@ const styles = StyleSheet.create({
     padding: Spacing.gutter,
   },
   modalCard: {
-    backgroundColor: Colors.card,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: Colors.line,
     padding: Spacing.cardPadding,
     gap: 12,
   },
-  modalTitle: {
-    ...Typography.heading,
-    color: Colors.textPrimary,
-  },
-  modalDesc: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-  },
+  modalTitle: { ...Typography.heading },
+  modalDesc: { ...Typography.label },
   modalInput: {
     minHeight: 80,
-    backgroundColor: Colors.surface,
     borderWidth: 1,
-    borderColor: Colors.line,
     borderRadius: Spacing.radiusMd,
     paddingHorizontal: Spacing.gutter,
     paddingVertical: 10,
     ...Typography.body,
-    color: Colors.textPrimary,
     textAlignVertical: 'top',
   },
   modalRow: {
@@ -763,25 +769,20 @@ const styles = StyleSheet.create({
     minHeight: 42,
     paddingHorizontal: 16,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  modalCancelText: {
-    ...Typography.label,
-    color: Colors.textSecondary,
-  },
+  modalCancelText: { ...Typography.label },
   modalPublish: {
     minHeight: 42,
     paddingHorizontal: 20,
     borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.cyanPrimary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   modalPublishText: {
     ...Typography.label,
-    color: Colors.base,
+    color: '#080F13',
     fontWeight: '700',
   },
 });

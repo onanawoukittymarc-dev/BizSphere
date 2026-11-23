@@ -1,19 +1,31 @@
 // app/_layout.tsx
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { Colors } from '../constants/theme';
 import { ChatsProvider } from '../src/store/chatStore';
+import { ThemeProvider, useAppTheme } from '../src/store/themeStore';
 
-export default function RootLayout() {
+function RootNavigator() {
+  const { themeMode, colors } = useAppTheme();
+
   return (
-    <ChatsProvider>
-      <StatusBar style="light" />
+    <>
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <Stack
         screenOptions={{
           headerShown: false,
-          contentStyle: { backgroundColor: Colors.base },
+          contentStyle: { backgroundColor: colors.base },
         }}
       />
-    </ChatsProvider>
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <ChatsProvider>
+        <RootNavigator />
+      </ChatsProvider>
+    </ThemeProvider>
   );
 }

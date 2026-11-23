@@ -1,83 +1,122 @@
 // components/StateView.tsx
 import { Ionicons } from '@expo/vector-icons';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Colors, Spacing, Typography } from '../constants/theme';
+import {
+  ActivityIndicator,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { Spacing, Typography } from '../constants/theme';
+import { useAppTheme } from '../src/store/themeStore';
+
+export type StateViewVariant = 'empty' | 'loading' | 'error';
 
 interface StateViewProps {
-  icon: keyof typeof Ionicons.glyphMap;
+  variant?: StateViewVariant;
+  icon?: keyof typeof Ionicons.glyphMap;
   title: string;
   description: string;
-  actionLabel: string;
-  onAction: () => void;
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 export function StateView({
-  icon,
+  variant = 'empty',
+  icon = 'alert-circle-outline',
   title,
   description,
   actionLabel,
   onAction,
 }: StateViewProps) {
+  const { colors } = useAppTheme();
+
+  const accentColor =
+    variant === 'error'
+      ? colors.danger
+      : variant === 'loading'
+      ? colors.purpleAi
+      : colors.cyanPrimary;
+
   return (
-    <View style={styles.container}>
-      <View style={styles.iconBadge}>
-        <Ionicons name={icon} size={28} color={Colors.cyanPrimary} />
-      </View>
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.description}>{description}</Text>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={onAction}
-        activeOpacity={0.8}
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: colors.card, borderColor: colors.line },
+      ]}
+    >
+      <View
+        style={[
+          styles.iconBadge,
+          { backgroundColor: `${accentColor}1A`, borderColor: `${accentColor}44` },
+        ]}
       >
-        <Text style={styles.buttonText}>{actionLabel}</Text>
-      </TouchableOpacity>
+        {variant === 'loading' ? (
+          <ActivityIndicator size="small" color={accentColor} />
+        ) : (
+          <Ionicons name={icon} size={28} color={accentColor} />
+        )}
+      </View>
+
+      <Text style={[styles.title, { color: colors.textPrimary }]}>{title}</Text>
+      <Text style={[styles.description, { color: colors.textSecondary }]}>
+        {description}
+      </Text>
+
+      {actionLabel && onAction && variant !== 'loading' && (
+        <TouchableOpacity
+          style={[styles.actionBtn, { backgroundColor: accentColor }]}
+          activeOpacity={0.85}
+          onPress={onAction}
+        >
+          <Text style={styles.actionText}>{actionLabel}</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: Colors.card,
-    borderRadius: Spacing.radiusLg,
-    borderWidth: 1,
-    borderColor: Colors.line,
-    padding: Spacing.cardPadding * 1.5,
     alignItems: 'center',
     justifyContent: 'center',
-    margin: Spacing.gutter,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingVertical: Spacing.gutter * 1.5,
+    paddingHorizontal: Spacing.gutter,
+    marginVertical: Spacing.grid * 2,
+    gap: 10,
   },
   iconBadge: {
     width: 56,
     height: 56,
     borderRadius: Spacing.radiusPill,
-    backgroundColor: Colors.surface,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.gutter,
+    marginBottom: 4,
   },
   title: {
-    ...Typography.heading,
-    color: Colors.textPrimary,
+    ...Typography.bodyStrong,
+    fontSize: 17,
     textAlign: 'center',
-    marginBottom: Spacing.grid * 2,
   },
   description: {
     ...Typography.label,
-    color: Colors.textSecondary,
     textAlign: 'center',
-    marginBottom: Spacing.gutter * 1.5,
+    maxWidth: 280,
   },
-  button: {
-    minHeight: Spacing.minTapTarget,
-    paddingHorizontal: Spacing.gutter * 1.25,
-    borderRadius: Spacing.radiusMd,
-    backgroundColor: Colors.cyanPrimary,
+  actionBtn: {
+    marginTop: 8,
+    minHeight: 42,
+    paddingHorizontal: 18,
+    borderRadius: Spacing.radiusPill,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  buttonText: {
-    ...Typography.bodyStrong,
-    color: Colors.base,
+  actionText: {
+    ...Typography.label,
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
 });

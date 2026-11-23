@@ -1,23 +1,25 @@
 // app/(tabs)/_layout.tsx
 import { Ionicons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import { Colors, Spacing } from '../../constants/theme';
+import { useAppTheme } from '../../src/store/themeStore';
 
-export default function TabsLayout() {
+export default function TabLayout() {
+  const { colors } = useAppTheme();
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarActiveTintColor: colors.cyanPrimary,
+        tabBarInactiveTintColor: colors.textSecondary,
         tabBarStyle: {
-          backgroundColor: Colors.surface,
-          borderTopColor: Colors.line,
+          backgroundColor: colors.surface,
+          borderTopColor: colors.line,
           borderTopWidth: 1,
-          height: 64,
-          paddingBottom: Spacing.grid * 2,
-          paddingTop: Spacing.grid,
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 6,
         },
-        tabBarActiveTintColor: Colors.cyanPrimary,
-        tabBarInactiveTintColor: Colors.textSecondary,
         tabBarLabelStyle: {
           fontSize: 12,
           fontWeight: '600',
@@ -29,7 +31,7 @@ export default function TabsLayout() {
         options={{
           title: 'Chats',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="chatbubbles" size={size} color={color} />
+            <Ionicons name="chatbubbles-outline" size={size} color={color} />
           ),
         }}
       />
@@ -38,7 +40,7 @@ export default function TabsLayout() {
         options={{
           title: 'Stories',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="radio-button-on" size={size} color={color} />
+            <Ionicons name="albums-outline" size={size} color={color} />
           ),
         }}
       />
@@ -47,7 +49,7 @@ export default function TabsLayout() {
         options={{
           title: 'Reels',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="play-circle" size={size} color={color} />
+            <Ionicons name="film-outline" size={size} color={color} />
           ),
         }}
       />
@@ -56,7 +58,7 @@ export default function TabsLayout() {
         options={{
           title: 'Meet',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="videocam" size={size} color={color} />
+            <Ionicons name="videocam-outline" size={size} color={color} />
           ),
         }}
       />
